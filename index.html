@@ -510,7 +510,7 @@ h1 {
         }
         if (loadDecryptedData(encryptedData, pwd)) {
             document.getElementById('lockOverlay').classList.add('hidden');
-            window.location.hash = pwd;
+            history.replaceState(null, '', '#' + encodeURIComponent(pwd));
             initApp();
         } else {
             document.getElementById('lockError').style.display = 'block';
@@ -524,8 +524,9 @@ h1 {
     });
 
     function tryHashPassword() {
-        var hash = window.location.hash.substring(1);
-        if (!hash) return false;
+        var raw = window.location.hash.substring(1);
+        if (!raw) return false;
+        var hash = decodeURIComponent(raw);
         var encryptedData = window.ledgerData;
         if (!encryptedData) return false;
         if (loadDecryptedData(encryptedData, hash)) {
