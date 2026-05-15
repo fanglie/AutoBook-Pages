@@ -1118,6 +1118,8 @@ h1 {
     if (!tryHashPassword()) {
         document.getElementById('lockOverlay').classList.remove('hidden');
         setTimeout(function() { document.getElementById('lockPassword').focus(); }, 100);
+    } else {
+        initApp();
     }
 })();
 </script>
