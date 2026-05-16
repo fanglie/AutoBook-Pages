@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>账单分析</title>
-<meta name="secure-template-version" content='secure-template-version-3.0' />
+<meta name="secure-template-version" content='secure-template-version-3.1' />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='3' y='14' width='5' height='15' rx='1' fill='%23EA8379'/><rect x='10' y='8' width='5' height='21' rx='1' fill='%23299D8F'/><rect x='17' y='18' width='5' height='11' rx='1' fill='%23EA8379' opacity='.65'/><rect x='24' y='4' width='5' height='25' rx='1' fill='%23299D8F' opacity='.65'/><polyline points='4,12 12,6 20,16 28,2' fill='none' stroke='%232D3436' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>" type="image/svg+xml">
 <script src="./crypto-js.min.js"></script>
 <script src="./echarts.min.js"></script>
@@ -237,6 +237,8 @@ h1 {
 .tag-expense { background: #FFF0EE; color: var(--expense); }
 .tag-income { background: #E8F5F2; color: var(--income); }
 .tag-refund { background: var(--bg-page); color: var(--text-secondary); }
+.tag-transfer { background: #EEF0F5; color: #636E72; }
+.amt-transfer { color: #6C7A89; }
 .txn-category { flex: 0 0 70px; color: var(--text-secondary); font-size: 12px; }
 .txn-counterparty { flex: 1; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .txn-source {
@@ -535,6 +537,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
 
     function formatAmount(amount, ttype) {
         var absVal = Math.abs(amount);
+        if (ttype === '转账') return fmt(absVal);
         var sign = (ttype === '收入' || ttype === '退款') ? '+' : '-';
         return sign + fmt(absVal);
     }
@@ -991,8 +994,8 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
             html += '</span></div>';
 
             txns.forEach(function(t) {
-                var amountClass = t.ttype === '收入' ? 'amt-income' : t.ttype === '退款' ? 'amt-refund' : 'amt-expense';
-                var typeClass = t.ttype === '收入' ? 'tag-income' : t.ttype === '退款' ? 'tag-refund' : 'tag-expense';
+                var amountClass = t.ttype === '转账' ? 'amt-transfer' : t.ttype === '收入' ? 'amt-income' : t.ttype === '退款' ? 'amt-refund' : 'amt-expense';
+                var typeClass = t.ttype === '转账' ? 'tag-transfer' : t.ttype === '收入' ? 'tag-income' : t.ttype === '退款' ? 'tag-refund' : 'tag-expense';
                 var srcLabel = SOURCE_LABELS[t.source_type] || t.source_type;
                 var timeStr = t.date.length >= 16 ? t.date.slice(11, 16) : '';
 
