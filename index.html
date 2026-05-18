@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>账单分析</title>
-<meta name="secure-template-version" content='secure-template-version-3.2' />
+<title>泡泡君的自动账本</title>
+<meta name="secure-template-version" content='secure-template-version-3.6' />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='3' y='14' width='5' height='15' rx='1' fill='%23EA8379'/><rect x='10' y='8' width='5' height='21' rx='1' fill='%23299D8F'/><rect x='17' y='18' width='5' height='11' rx='1' fill='%23EA8379' opacity='.65'/><rect x='24' y='4' width='5' height='25' rx='1' fill='%23299D8F' opacity='.65'/><polyline points='4,12 12,6 20,16 28,2' fill='none' stroke='%232D3436' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>" type="image/svg+xml">
 <script src="./crypto-js.min.js"></script>
 <script src="./echarts.min.js"></script>
@@ -34,6 +34,35 @@ body {
 h1 {
     text-align: center; font-size: 26px; font-weight: 700; color: var(--text-primary);
     margin-bottom: 20px; letter-spacing: 0.5px;
+}
+.title-row { display: inline-flex; align-items: center; gap: 0; }
+.version-badge {
+    font-size: 12px; font-weight: 400; color: var(--text-muted);
+    margin-left: 8px; vertical-align: middle; white-space: nowrap;
+}
+.data-freshness-badge {
+    position: relative; display: inline-block;
+    font-size: 13px; color: var(--text-secondary); font-weight: 400;
+    cursor: default; margin-top: 4px; user-select: none;
+}
+.data-freshness-badge:hover .freshness-tooltip,
+.data-freshness-badge:focus-within .freshness-tooltip {
+    display: block;
+}
+.freshness-tooltip {
+    display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    background: var(--bg-card); border: 1px solid var(--border-light);
+    border-radius: var(--radius); padding: 12px 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 100;
+    min-width: 320px; margin-top: 8px; font-size: 12px;
+}
+.freshness-tooltip table { width: 100%; border-collapse: collapse; }
+.freshness-tooltip th {
+    text-align: left; padding: 4px 8px; font-weight: 500;
+    color: var(--text-muted); border-bottom: 1px solid var(--border-light);
+}
+.freshness-tooltip td {
+    padding: 4px 8px; color: var(--text-secondary);
 }
 
 /* loading */
@@ -396,7 +425,11 @@ h1 {
     <div class="loading-error" id="loadingError"></div>
 </div>
 <div class="container">
-    <h1><svg width="28" height="28" viewBox="0 0 32 32" style="vertical-align:middle;margin-right:8px"><rect x="3" y="14" width="5" height="15" rx="1" fill="#EA8379"/><rect x="10" y="8" width="5" height="21" rx="1" fill="#299D8F"/><rect x="17" y="18" width="5" height="11" rx="1" fill="#EA8379" opacity=".65"/><rect x="24" y="4" width="5" height="25" rx="1" fill="#299D8F" opacity=".65"/><polyline points="4,12 12,6 20,16 28,2" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>账单分析</h1>
+    <h1><span class="title-row"><svg width="28" height="28" viewBox="0 0 32 32" style="vertical-align:middle;margin-right:8px"><rect x="3" y="14" width="5" height="15" rx="1" fill="#EA8379"/><rect x="10" y="8" width="5" height="21" rx="1" fill="#299D8F"/><rect x="17" y="18" width="5" height="11" rx="1" fill="#EA8379" opacity=".65"/><rect x="24" y="4" width="5" height="25" rx="1" fill="#299D8F" opacity=".65"/><polyline points="4,12 12,6 20,16 28,2" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>泡泡君的自动账本<span class="version-badge">v3.6</span></span>
+    <div class="data-freshness-badge" id="freshnessBadge" style="display:none;">
+        <span id="freshnessText"></span>
+        <div class="freshness-tooltip" id="freshnessTooltip"></div>
+    </div></h1>
 
     <div class="month-nav">
         <button id="prevMonth" title="上月">&lsaquo;</button>
@@ -1257,6 +1290,29 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         renderBalance();
     }
 
+    function _renderFreshness() {
+        var d = window.__REPORT_DATA;
+        if (!d || !d.freshness || !d.freshness.overall_max) {
+            var badge = document.getElementById('freshnessBadge');
+            if (badge) badge.style.display = 'none';
+            return;
+        }
+        var f = d.freshness;
+        var badge = document.getElementById('freshnessBadge');
+        var text = document.getElementById('freshnessText');
+        var tooltip = document.getElementById('freshnessTooltip');
+        if (!badge || !text || !tooltip) return;
+        text.textContent = '数据更新至 ' + f.overall_max;
+        badge.style.display = '';
+        var html = '<table><thead><tr><th>渠道</th><th>起始日期</th><th>截止日期</th></tr></thead><tbody>';
+        for (var i = 0; i < f.sources.length; i++) {
+            var s = f.sources[i];
+            html += '<tr><td>' + s.name + '</td><td>' + s.min_date + '</td><td>' + s.max_date + '</td></tr>';
+        }
+        html += '</tbody></table>';
+        tooltip.innerHTML = html;
+    }
+
     function init() {
         if (typeof echarts === 'undefined') {
             document.querySelector('.container').innerHTML =
@@ -1280,6 +1336,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         });
         initSelect();
         render();
+        _renderFreshness();
         var section = document.getElementById('fullTxnSection');
         if (section) {
             section.addEventListener('wheel', handleWheel, { passive: false });
