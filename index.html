@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>账单分析</title>
-<meta name="secure-template-version" content='secure-template-version-3.1' />
+<meta name="secure-template-version" content='secure-template-version-3.2' />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='3' y='14' width='5' height='15' rx='1' fill='%23EA8379'/><rect x='10' y='8' width='5' height='21' rx='1' fill='%23299D8F'/><rect x='17' y='18' width='5' height='11' rx='1' fill='%23EA8379' opacity='.65'/><rect x='24' y='4' width='5' height='25' rx='1' fill='%23299D8F' opacity='.65'/><polyline points='4,12 12,6 20,16 28,2' fill='none' stroke='%232D3436' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>" type="image/svg+xml">
 <script src="./crypto-js.min.js"></script>
 <script src="./echarts.min.js"></script>
@@ -28,6 +28,7 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
 }
 .container { max-width: 1400px; margin: 0 auto; padding: 24px 24px 48px; }
 h1 {
@@ -54,13 +55,14 @@ h1 {
 
 /* two-column layout */
 .two-col {
-    display: flex; gap: 24px; align-items: flex-start;
+    display: flex; gap: 24px; align-items: flex-start; overflow: hidden;
 }
 .left-col {
-    flex: 0 0 58%; max-width: 58%; min-width: 0;
+    flex: 1; min-width: 0;
 }
 .right-col {
-    flex: 1; position: sticky; top: 16px; height: calc(100vh - 32px);
+    flex: 0 0 560px; max-width: 560px; min-width: 0; overflow-x: hidden;
+    position: sticky; top: 16px; height: calc(100vh - 32px);
     display: flex; flex-direction: column;
 }
 .right-col .section { margin-bottom: 0; }
@@ -69,10 +71,29 @@ h1 {
 #fullTxnSection {
     flex: 1; overflow-y: auto; min-height: 0;
     scrollbar-width: thin; scrollbar-color: var(--border-light) transparent;
+    overscroll-behavior-y: contain;
+    position: relative;
 }
+#fullTxnSection:focus { outline: none; }
 #fullTxnSection::-webkit-scrollbar { width: 6px; }
 #fullTxnSection::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
-#txnListBody { padding: 0 4px; }
+#txnListBody { padding: 0 4px; overflow: hidden; }
+#txnListBody.elastic-transition { transition: transform 0.3s ease-out; }
+@keyframes slide-out-down { from { transform: translateY(0); } to { transform: translateY(100%); } }
+@keyframes slide-out-up { from { transform: translateY(0); } to { transform: translateY(-100%); } }
+@keyframes slide-in-down { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+@keyframes slide-in-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+#txnListBody.anim-slide-out-down { animation: slide-out-down 0.4s ease-in forwards; }
+#txnListBody.anim-slide-out-up { animation: slide-out-up 0.4s ease-in forwards; }
+#txnListBody.anim-slide-in-down { animation: slide-in-down 0.4s ease-out forwards; }
+#txnListBody.anim-slide-in-up { animation: slide-in-up 0.4s ease-out forwards; }
+.boundary-toast {
+    position: sticky; top: 0; z-index: 10; text-align: center;
+    padding: 8px 16px; font-size: 13px; color: var(--text-secondary);
+    background: rgba(245,247,249,0.92); border-radius: 0 0 8px 8px;
+    pointer-events: none; opacity: 0; transition: opacity 0.3s;
+}
+.boundary-toast.show { opacity: 1; }
 
 /* month nav */
 .month-nav {
@@ -220,18 +241,18 @@ h1 {
 }
 .day-total { font-size: 12px; font-weight: 400; color: var(--text-muted); }
 .txn-row {
-    display: flex; align-items: center; padding: 10px 4px; gap: 12px;
+    display: flex; align-items: center; padding: 10px 4px; gap: 10px;
     border-bottom: 1px solid var(--border-light); font-size: 13px;
 }
 .txn-row:last-child { border-bottom: none; }
 .txn-time { flex: 0 0 44px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.txn-amount { flex: 0 0 90px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.txn-amount { flex: 0 0 80px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
 .amt-expense { color: var(--expense); }
 .amt-income { color: var(--income); }
 .amt-refund { color: var(--text-secondary); }
-.txn-account { flex: 0 0 100px; color: var(--text-secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.txn-account { flex: 0 0 80px; color: var(--text-secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .txn-type {
-    flex: 0 0 40px; font-size: 11px; padding: 2px 6px; border-radius: 4px;
+    flex: 0 0 36px; font-size: 11px; padding: 2px 6px; border-radius: 4px;
     font-weight: 500; text-align: center;
 }
 .tag-expense { background: #FFF0EE; color: var(--expense); }
@@ -239,11 +260,17 @@ h1 {
 .tag-refund { background: var(--bg-page); color: var(--text-secondary); }
 .tag-transfer { background: #EEF0F5; color: #636E72; }
 .amt-transfer { color: #6C7A89; }
-.txn-category { flex: 0 0 70px; color: var(--text-secondary); font-size: 12px; }
+.txn-category { flex: 0 0 60px; color: var(--text-secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .txn-counterparty { flex: 1; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .txn-source {
-    flex: 0 0 48px; font-size: 10px; color: var(--text-muted); background: var(--bg-page);
+    flex: 0 0 44px; font-size: 10px; color: var(--text-muted); background: var(--bg-page);
     padding: 1px 5px; border-radius: 3px; text-align: center;
+}
+.txn-tooltip {
+    position: fixed; z-index: 1000; background: rgba(0,0,0,0.8); color: #fff;
+    padding: 4px 10px; border-radius: 4px; font-size: 12px; max-width: 300px;
+    word-break: break-all; pointer-events: none; white-space: normal;
+    display: none;
 }
 
 /* breadcrumb & filter tag */
@@ -278,6 +305,26 @@ h1 {
 .footer {
     text-align: center; font-size: 12px; color: var(--text-muted);
     margin-top: 12px; padding: 16px 0;
+}
+
+/* responsive breakpoints */
+@media (min-width: 1200px) {
+    #fullTxnSection { overflow-x: hidden; }
+}
+@media (min-width: 1024px) and (max-width: 1199px) {
+    .two-col { overflow: hidden; }
+    .left-col { flex: 0 0 50%; max-width: 50%; }
+    .right-col { flex: 1; max-width: none; min-width: 0; }
+    #fullTxnSection { overflow-x: auto; }
+}
+@media (max-width: 1023px) {
+    .two-col { flex-direction: column; overflow: hidden; }
+    .left-col { width: 100%; flex: none; }
+    .right-col {
+        position: static; height: auto; flex: none; width: 100%;
+        max-width: 100%;
+    }
+    #fullTxnSection { max-height: 60vh; overflow-x: hidden; }
 }
 
 /* lock modal */
@@ -423,7 +470,7 @@ h1 {
                     <input id="txnSearch" type="text" placeholder="搜索交易：对方名称、分类、账户...">
                 </div>
             </div>
-            <div class="txn-section" id="fullTxnSection">
+            <div class="txn-section" id="fullTxnSection" tabindex="0">
                 <div id="txnListBody"></div>
             </div>
         </div>
@@ -507,6 +554,56 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
     var expensePieChart, subPieChart, accountChart;
     var currentDrilldownCat1 = null;
     var currentFilter = {type: null, value: null, cat1: null, cat2: null};
+
+    var elasticOffset = 0;
+    var elasticAccum = 0;
+    var elasticTimer = null;
+    var isTransitioning = false;
+    var _boundaryToastEl = null;
+    var _boundaryToastTimer = null;
+
+    var _txnTooltip = null;
+    function _getTooltip() {
+        if (!_txnTooltip) {
+            _txnTooltip = document.createElement('div');
+            _txnTooltip.className = 'txn-tooltip';
+            document.body.appendChild(_txnTooltip);
+        }
+        return _txnTooltip;
+    }
+    function _detectTruncation() {
+        var container = document.getElementById('txnListBody');
+        if (!container) return;
+        var selectors = ['.txn-account', '.txn-category', '.txn-counterparty'];
+        selectors.forEach(function(sel) {
+            var els = container.querySelectorAll(sel);
+            for (var i = 0; i < els.length; i++) {
+                var el = els[i];
+                if (el.scrollWidth > el.clientWidth) {
+                    (function(elem) {
+                        elem.addEventListener('mouseenter', function(e) {
+                            var tip = _getTooltip();
+                            tip.textContent = elem.textContent;
+                            tip.style.display = 'block';
+                            var x = e.clientX + 10;
+                            var y = e.clientY + 14;
+                            tip.style.left = x + 'px';
+                            tip.style.top = y + 'px';
+                            requestAnimationFrame(function() {
+                                var rect = tip.getBoundingClientRect();
+                                if (rect.right > window.innerWidth - 8) {
+                                    tip.style.left = (window.innerWidth - rect.width - 8) + 'px';
+                                }
+                            });
+                        });
+                        elem.addEventListener('mouseleave', function() {
+                            _getTooltip().style.display = 'none';
+                        });
+                    })(el);
+                }
+            }
+        });
+    }
 
     var ALL_MONTHS = [];
     var MONTH_DATA = {};
@@ -1017,6 +1114,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
             html = '<div class="empty-state">无匹配的交易记录</div>';
         }
         document.getElementById('txnListBody').innerHTML = html;
+        _detectTruncation();
     }
 
     window._scrollToDay = function(dateStr) {
@@ -1028,6 +1126,120 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
             container.scrollTo({ top: el.offsetTop - container.offsetTop - 10, behavior: 'smooth' });
         }
     };
+
+    function _resetElastic() {
+        var body = document.getElementById('txnListBody');
+        if (!body) return;
+        elasticOffset = 0;
+        elasticAccum = 0;
+        body.style.transform = '';
+        body.classList.remove('elastic-transition');
+        if (elasticTimer) { clearTimeout(elasticTimer); elasticTimer = null; }
+    }
+
+    function _showBoundaryToast(message) {
+        var section = document.getElementById('fullTxnSection');
+        if (!section) return;
+        if (!_boundaryToastEl) {
+            _boundaryToastEl = document.createElement('div');
+            _boundaryToastEl.className = 'boundary-toast';
+            section.insertBefore(_boundaryToastEl, section.firstChild);
+        }
+        _boundaryToastEl.textContent = message;
+        _boundaryToastEl.classList.add('show');
+        if (_boundaryToastTimer) clearTimeout(_boundaryToastTimer);
+        _boundaryToastTimer = setTimeout(function() {
+            if (_boundaryToastEl) _boundaryToastEl.classList.remove('show');
+        }, 1500);
+    }
+
+    function _switchMonth(direction) {
+        var section = document.getElementById('fullTxnSection');
+        var body = document.getElementById('txnListBody');
+        if (!section || !body || isTransitioning) return;
+        var idx = ALL_MONTHS.indexOf(currentMonth);
+        var targetIdx = direction === 'down' ? idx + 1 : idx - 1;
+        if (targetIdx < 0) { _showBoundaryToast('已是最早月份'); return; }
+        if (targetIdx >= ALL_MONTHS.length) { _showBoundaryToast('已是最早月份'); return; }
+        isTransitioning = true;
+        _resetElastic();
+        var outClass = direction === 'down' ? 'anim-slide-out-down' : 'anim-slide-out-up';
+        body.classList.add(outClass);
+        body.addEventListener('animationend', function onOut(e) {
+            body.removeEventListener('animationend', onOut);
+            body.classList.remove(outClass);
+            currentMonth = ALL_MONTHS[targetIdx];
+            var sel = document.getElementById('monthSelect');
+            var titleEl = document.getElementById('monthTitle');
+            if (sel) sel.value = currentMonth;
+            if (titleEl) titleEl.textContent = _formatMonth(currentMonth);
+            render();
+            if (direction === 'down') {
+                section.scrollTop = 0;
+            } else {
+                section.scrollTop = section.scrollHeight - section.clientHeight;
+            }
+            body = document.getElementById('txnListBody');
+            if (!body) { isTransitioning = false; return; }
+            var inClass = direction === 'down' ? 'anim-slide-in-down' : 'anim-slide-in-up';
+            body.classList.add(inClass);
+            body.addEventListener('animationend', function onIn(e) {
+                body.removeEventListener('animationend', onIn);
+                body.classList.remove(inClass);
+                isTransitioning = false;
+            });
+        });
+    }
+
+    function handleWheel(e) {
+        if (isTransitioning) { e.preventDefault(); return; }
+        var section = document.getElementById('fullTxnSection');
+        var body = document.getElementById('txnListBody');
+        if (!section || !body) return;
+        var atTop = section.scrollTop <= 1;
+        var atBottom = section.scrollTop + section.clientHeight >= section.scrollHeight - 1;
+        var atBoundary = false;
+        if (atTop && e.deltaY < 0) atBoundary = true;
+        if (atBottom && e.deltaY > 0) atBoundary = true;
+        if (!atBoundary) return;
+        e.preventDefault();
+        var idx = ALL_MONTHS.indexOf(currentMonth);
+        if ((atBottom && e.deltaY > 0 && idx >= ALL_MONTHS.length - 1) ||
+            (atTop && e.deltaY < 0 && idx <= 0)) {
+            _showBoundaryToast('已是最早月份');
+            return;
+        }
+        var MAX_OFFSET = 60;
+        var THRESHOLD = 80;
+        var delta = Math.abs(e.deltaY);
+        var damping = 1 - Math.abs(elasticOffset) / MAX_OFFSET;
+        if (damping < 0.05) damping = 0.05;
+        var step = delta * damping;
+        elasticOffset += (e.deltaY > 0 ? 1 : -1) * step;
+        if (elasticOffset > MAX_OFFSET) elasticOffset = MAX_OFFSET;
+        if (elasticOffset < -MAX_OFFSET) elasticOffset = -MAX_OFFSET;
+        elasticAccum += step;
+        body.style.transform = 'translateY(' + elasticOffset + 'px)';
+        if (elasticTimer) clearTimeout(elasticTimer);
+        elasticTimer = setTimeout(function() {
+            body.classList.add('elastic-transition');
+            body.style.transform = 'translateY(0)';
+            elasticOffset = 0;
+            elasticAccum = 0;
+            function onEnd(e) {
+                body.removeEventListener('transitionend', onEnd);
+                body.classList.remove('elastic-transition');
+            }
+            body.addEventListener('transitionend', onEnd);
+            elasticTimer = null;
+        }, 300);
+        if (elasticAccum >= THRESHOLD) {
+            var dir = e.deltaY > 0 ? 'down' : 'up';
+            elasticAccum = 0;
+            if (elasticTimer) { clearTimeout(elasticTimer); elasticTimer = null; }
+            _switchMonth(dir);
+        }
+    }
 
     function render() {
         var md = MONTH_DATA[currentMonth];
@@ -1068,6 +1280,35 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         });
         initSelect();
         render();
+        var section = document.getElementById('fullTxnSection');
+        if (section) {
+            section.addEventListener('wheel', handleWheel, { passive: false });
+            section.addEventListener('click', function() { section.focus(); });
+            section.addEventListener('keydown', function(e) {
+                if (e.key === 'PageDown') {
+                    var remain = section.scrollHeight - section.clientHeight - section.scrollTop;
+                    if (remain < section.clientHeight) {
+                        e.preventDefault();
+                        var idx = ALL_MONTHS.indexOf(currentMonth);
+                        if (idx < ALL_MONTHS.length - 1) {
+                            _switchMonth('down');
+                        } else {
+                            _showBoundaryToast('已是最早月份');
+                        }
+                    }
+                } else if (e.key === 'PageUp') {
+                    if (section.scrollTop <= 1) {
+                        e.preventDefault();
+                        var idx = ALL_MONTHS.indexOf(currentMonth);
+                        if (idx > 0) {
+                            _switchMonth('up');
+                        } else {
+                            _showBoundaryToast('已是最早月份');
+                        }
+                    }
+                }
+            });
+        }
         document.getElementById('loadingOverlay').classList.add('hidden');
     }
 
