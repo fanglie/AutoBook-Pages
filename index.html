@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>泡泡君的自动账本</title>
-<meta name="secure-template-version" content='secure-template-version-3.6' />
+<meta name="secure-template-version" content='secure-template-version-3.8' />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='3' y='14' width='5' height='15' rx='1' fill='%23EA8379'/><rect x='10' y='8' width='5' height='21' rx='1' fill='%23299D8F'/><rect x='17' y='18' width='5' height='11' rx='1' fill='%23EA8379' opacity='.65'/><rect x='24' y='4' width='5' height='25' rx='1' fill='%23299D8F' opacity='.65'/><polyline points='4,12 12,6 20,16 28,2' fill='none' stroke='%232D3436' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>" type="image/svg+xml">
 <script src="./crypto-js.min.js"></script>
 <script src="./echarts.min.js"></script>
@@ -248,7 +248,7 @@ h1 {
 .cal-income { font-size: 12px; color: var(--income); line-height: 1.2; }
 
 /* search */
-.search-box { margin: 16px 0; text-align: center; }
+.search-box { margin: 16px 0; text-align: center; position: relative; }
 .search-box input {
     width: 100%; max-width: 400px; padding: 10px 16px; border: 1px solid var(--border-light);
     border-radius: 20px; font-size: 14px; outline: none; background: var(--bg-card);
@@ -256,6 +256,79 @@ h1 {
 }
 .search-box input:focus { border-color: var(--income); }
 .search-box input::placeholder { color: var(--text-muted); }
+.search-box input.filter-active { border-color: var(--expense); box-shadow: 0 0 0 2px rgba(234,131,121,0.2); }
+
+/* filter row */
+.filter-row {
+    display: flex; align-items: center; gap: 8px; padding: 0 0 4px; flex-wrap: nowrap;
+    font-size: 12px; overflow-x: auto;
+}
+.filter-row input[type="text"] {
+    width: 110px; padding: 4px 8px; border: 1px solid var(--border-light);
+    border-radius: 12px; font-size: 12px; outline: none; background: var(--bg-card);
+    color: var(--text-primary); flex-shrink: 0;
+}
+.filter-row input[type="text"]:focus { border-color: var(--income); }
+.filter-row input[type="text"]::placeholder { color: var(--text-muted); font-size: 11px; }
+.type-btn-group { display: flex; gap: 0; flex-shrink: 0; }
+.type-btn {
+    padding: 3px 8px; border: 1px solid var(--border-light); background: var(--bg-card);
+    font-size: 11px; cursor: pointer; color: var(--text-secondary); transition: all .15s;
+    white-space: nowrap;
+}
+.type-btn:first-child { border-radius: 10px 0 0 10px; }
+.type-btn:last-child { border-radius: 0 10px 10px 0; }
+.type-btn:not(:first-child) { margin-left: -1px; }
+.type-btn.active { background: var(--income); color: #fff; border-color: var(--income); z-index: 1; }
+.filter-row input[type="month"] {
+    width: 120px; padding: 3px 6px; border: 1px solid var(--border-light);
+    border-radius: 10px; font-size: 11px; outline: none; background: var(--bg-card);
+    color: var(--text-primary); flex-shrink: 0;
+}
+.filter-row input[type="month"]:focus { border-color: var(--income); }
+.filter-reset-btn {
+    padding: 3px 10px; border: 1px solid var(--border-light); border-radius: 10px;
+    font-size: 11px; cursor: pointer; color: var(--text-muted); background: var(--bg-card);
+    white-space: nowrap; flex-shrink: 0; transition: all .15s;
+}
+.filter-reset-btn:hover { background: var(--bg-page); color: var(--text-primary); }
+
+/* search summary */
+.search-summary {
+    display: none; padding: 10px 14px; margin-bottom: 8px; border-radius: 8px;
+    background: var(--bg-page); font-size: 13px; color: var(--text-secondary);
+    gap: 16px; align-items: center;
+}
+.search-summary.visible { display: flex; }
+.search-summary .ss-item { white-space: nowrap; }
+.search-summary .ss-count { font-weight: 600; color: var(--text-primary); }
+.search-summary .ss-expense { font-weight: 600; color: var(--expense); }
+.search-summary .ss-income { font-weight: 600; color: var(--income); }
+.search-summary .ss-truncate { color: var(--text-muted); font-style: italic; }
+
+/* search month group */
+.month-group-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 0 6px; margin-top: 8px;
+    border-bottom: 2px solid var(--border-light); cursor: pointer;
+    font-size: 15px; font-weight: 700; color: var(--income);
+    transition: color .15s;
+}
+.month-group-header:hover { color: var(--text-primary); }
+.month-group-header .mgh-hint { font-size: 11px; font-weight: 400; color: var(--text-muted); }
+.month-group-header:first-child { margin-top: 0; }
+
+/* search mode calendar hint */
+.cal-search-hint {
+    text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 14px;
+}
+.cal-search-hint .cal-search-hint-icon { font-size: 28px; margin-bottom: 8px; }
+
+/* mark highlight */
+mark {
+    background: rgba(234,131,121,0.25); color: inherit; padding: 0 2px;
+    border-radius: 2px; font-weight: 500;
+}
 
 /* txn list */
 .txn-section {
@@ -425,7 +498,7 @@ h1 {
     <div class="loading-error" id="loadingError"></div>
 </div>
 <div class="container">
-    <h1><span class="title-row"><svg width="28" height="28" viewBox="0 0 32 32" style="vertical-align:middle;margin-right:8px"><rect x="3" y="14" width="5" height="15" rx="1" fill="#EA8379"/><rect x="10" y="8" width="5" height="21" rx="1" fill="#299D8F"/><rect x="17" y="18" width="5" height="11" rx="1" fill="#EA8379" opacity=".65"/><rect x="24" y="4" width="5" height="25" rx="1" fill="#299D8F" opacity=".65"/><polyline points="4,12 12,6 20,16 28,2" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>泡泡君的自动账本<span class="version-badge">v3.6</span></span>
+    <h1><span class="title-row"><svg width="28" height="28" viewBox="0 0 32 32" style="vertical-align:middle;margin-right:8px"><rect x="3" y="14" width="5" height="15" rx="1" fill="#EA8379"/><rect x="10" y="8" width="5" height="21" rx="1" fill="#299D8F"/><rect x="17" y="18" width="5" height="11" rx="1" fill="#EA8379" opacity=".65"/><rect x="24" y="4" width="5" height="25" rx="1" fill="#299D8F" opacity=".65"/><polyline points="4,12 12,6 20,16 28,2" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>泡泡君的自动账本<span class="version-badge">v3.8</span></span>
     <div class="data-freshness-badge" id="freshnessBadge" style="display:none;">
         <span id="freshnessText"></span>
         <div class="freshness-tooltip" id="freshnessTooltip"></div>
@@ -460,6 +533,11 @@ h1 {
 
             <div class="section" id="calendarSection">
                 <div id="calendarGrid"></div>
+                <div id="calSearchHint" class="cal-search-hint" style="display:none;">
+                    <div class="cal-search-hint-icon">🔍</div>
+                    <div>搜索模式</div>
+                    <div style="font-size:12px;margin-top:4px;">清空搜索框和筛选器恢复日历</div>
+                </div>
             </div>
 
             <div class="section">
@@ -503,6 +581,21 @@ h1 {
                     <input id="txnSearch" type="text" placeholder="搜索交易：对方名称、分类、账户...">
                 </div>
             </div>
+            <div class="filter-row" id="filterRow">
+                <input id="amountFilter" type="text" placeholder=">100 / <50 / 100-500">
+                <div class="type-btn-group">
+                    <span class="type-btn active" data-type="全部">全部</span>
+                    <span class="type-btn" data-type="支出">支出</span>
+                    <span class="type-btn" data-type="收入">收入</span>
+                    <span class="type-btn" data-type="退款">退款</span>
+                    <span class="type-btn" data-type="转账">转账</span>
+                </div>
+                <input id="dateFrom" type="month" title="起始月份">
+                <span style="color:var(--text-muted);font-size:11px;flex-shrink:0;">~</span>
+                <input id="dateTo" type="month" title="结束月份">
+                <span class="filter-reset-btn" id="filterResetBtn">重置</span>
+            </div>
+            <div class="search-summary" id="searchSummary"></div>
             <div class="txn-section" id="fullTxnSection" tabindex="0">
                 <div id="txnListBody"></div>
             </div>
@@ -587,6 +680,200 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
     var expensePieChart, subPieChart, accountChart;
     var currentDrilldownCat1 = null;
     var currentFilter = {type: null, value: null, cat1: null, cat2: null};
+
+    var searchMode = false;
+    var savedFilter = null;
+    var amountFilterStr = '';
+    var typeFilter = '全部';
+    var dateRangeFilter = {from: '', to: ''};
+    var _searchDebounceTimer = null;
+
+    function isSearchActive() {
+        var keyword = document.getElementById('txnSearch').value.trim();
+        if (keyword) return true;
+        if (amountFilterStr) return true;
+        if (typeFilter !== '全部') return true;
+        if (dateRangeFilter.from || dateRangeFilter.to) return true;
+        return false;
+    }
+
+    function parseAmountFilter(str) {
+        str = str.trim();
+        if (!str) return null;
+        var m;
+        m = str.match(/^>\s*([\d.]+)$/);
+        if (m) { var v = parseFloat(m[1]); if (!isNaN(v)) return function(a) { return a > v; }; }
+        m = str.match(/^<\s*([\d.]+)$/);
+        if (m) { var v2 = parseFloat(m[1]); if (!isNaN(v2)) return function(a) { return a < v2; }; }
+        m = str.match(/^([\d.]+)\s*[-~]\s*([\d.]+)$/);
+        if (m) { var lo = parseFloat(m[1]), hi = parseFloat(m[2]); if (!isNaN(lo) && !isNaN(hi) && lo <= hi) return function(a) { return a >= lo && a <= hi; }; }
+        return null;
+    }
+
+    function enterSearchMode() {
+        if (searchMode) return;
+        searchMode = true;
+        savedFilter = {type: currentFilter.type, value: currentFilter.value, cat1: currentFilter.cat1, cat2: currentFilter.cat2};
+        document.getElementById('calendarGrid').style.display = 'none';
+        document.getElementById('calSearchHint').style.display = '';
+    }
+
+    function exitSearchMode() {
+        searchMode = false;
+        if (savedFilter) {
+            currentFilter = savedFilter;
+            savedFilter = null;
+        }
+        document.getElementById('calendarGrid').style.display = '';
+        document.getElementById('calSearchHint').style.display = 'none';
+        document.getElementById('searchSummary').classList.remove('visible');
+        document.getElementById('txnSearch').classList.remove('filter-active');
+    }
+
+    function clearSearchMode() {
+        document.getElementById('txnSearch').value = '';
+        amountFilterStr = '';
+        typeFilter = '全部';
+        dateRangeFilter = {from: '', to: ''};
+        document.getElementById('amountFilter').value = '';
+        var btns = document.querySelectorAll('.type-btn');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].classList.toggle('active', btns[i].getAttribute('data-type') === '全部');
+        }
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        exitSearchMode();
+        renderTxnList('');
+    }
+
+    function _highlightKeyword(text, keyword) {
+        if (!keyword || !text) return text || '';
+        var lower = text.toLowerCase();
+        var kw = keyword.toLowerCase();
+        var idx = lower.indexOf(kw);
+        if (idx < 0) return text;
+        return text.substring(0, idx) + '<mark>' + text.substring(idx, idx + kw.length) + '</mark>' + text.substring(idx + kw.length);
+    }
+
+    function renderSearchResults(keyword, amtFilterFn) {
+        if (!detailsReady) {
+            document.getElementById('txnListBody').innerHTML = '<div class="txn-hint">流水明细加载中，请稍候...</div>';
+            return;
+        }
+        enterSearchMode();
+
+        var allTxns = [];
+        var months = Object.keys(TXN_DETAILS).sort().reverse();
+        var kw = keyword ? keyword.toLowerCase() : '';
+
+        for (var mi = 0; mi < months.length; mi++) {
+            var month = months[mi];
+            if (dateRangeFilter.from && month < dateRangeFilter.from) continue;
+            if (dateRangeFilter.to && month > dateRangeFilter.to) continue;
+            var days = Object.keys(TXN_DETAILS[month]);
+            for (var di = 0; di < days.length; di++) {
+                var day = days[di];
+                var txns = TXN_DETAILS[month][day];
+                for (var ti = 0; ti < txns.length; ti++) {
+                    var t = txns[ti];
+                    if (kw) {
+                        var match = (t.counterparty || '').toLowerCase().indexOf(kw) >= 0 ||
+                                    (t.category1 || '').toLowerCase().indexOf(kw) >= 0 ||
+                                    (t.category2 || '').toLowerCase().indexOf(kw) >= 0 ||
+                                    (t.account || '').toLowerCase().indexOf(kw) >= 0;
+                        if (!match) continue;
+                    }
+                    if (amtFilterFn && !amtFilterFn(Math.abs(t.amount))) continue;
+                    if (typeFilter !== '全部' && t.ttype !== typeFilter) continue;
+                    t._month = month;
+                    t._day = day;
+                    allTxns.push(t);
+                }
+            }
+        }
+
+        allTxns.sort(function(a, b) {
+            if (a._month !== b._month) return a._month > b._month ? -1 : 1;
+            if (a._day !== b._day) return a._day > b._day ? -1 : 1;
+            return (a.date || '').localeCompare(b.date || '');
+        });
+
+        var truncated = allTxns.length > 500;
+        if (truncated) allTxns = allTxns.slice(0, 500);
+
+        var totalExp = 0, totalInc = 0;
+        for (var i = 0; i < allTxns.length; i++) {
+            if (allTxns[i].ttype === '支出') totalExp += allTxns[i].amount;
+            else if (allTxns[i].ttype === '收入') totalInc += allTxns[i].amount;
+        }
+
+        var summaryEl = document.getElementById('searchSummary');
+        var sumHtml = '<span class="ss-item">共 <span class="ss-count">' + allTxns.length + '</span> 笔</span>';
+        if (totalExp > 0) sumHtml += '<span class="ss-item">支出 <span class="ss-expense">' + fmt(totalExp) + '</span></span>';
+        if (totalInc > 0) sumHtml += '<span class="ss-item">收入 <span class="ss-income">' + fmt(Math.abs(totalInc)) + '</span></span>';
+        if (truncated) sumHtml += '<span class="ss-item ss-truncate">结果过多，请缩小搜索范围</span>';
+        summaryEl.innerHTML = sumHtml;
+        summaryEl.classList.add('visible');
+
+        var filterActive = amountFilterStr || typeFilter !== '全部' || dateRangeFilter.from || dateRangeFilter.to;
+        document.getElementById('txnSearch').classList.toggle('filter-active', filterActive);
+
+        var html = '';
+        var weekDayNames = ['周日','周一','周二','周三','周四','周五','周六'];
+        var currentGrpMonth = '';
+
+        for (var i = 0; i < allTxns.length; i++) {
+            var t = allTxns[i];
+            if (t._month !== currentGrpMonth) {
+                currentGrpMonth = t._month;
+                html += '<div class="month-group-header" onclick="window._jumpToMonth(&quot;' + t._month + '&quot;)">';
+                html += _formatMonth(t._month);
+                html += ' <span class="mgh-hint">点击查看该月</span></div>';
+            }
+
+            var dayParts = t._day.split('-');
+            var dateObj = new Date(parseInt(dayParts[0]), parseInt(dayParts[1])-1, parseInt(dayParts[2]));
+            var dayLabel = parseInt(dayParts[1]) + '月' + parseInt(dayParts[2]) + '日 ' + weekDayNames[dateObj.getDay()];
+
+            if (i === 0 || allTxns[i-1]._day !== t._day || allTxns[i-1]._month !== t._month) {
+                if (i > 0) html += '</div>';
+                html += '<div class="day-group" id="day-' + t._day + '">';
+                html += '<div class="day-header">' + dayLabel + '</div>';
+            }
+
+            var amountClass = t.ttype === '转账' ? 'amt-transfer' : t.ttype === '收入' ? 'amt-income' : t.ttype === '退款' ? 'amt-refund' : 'amt-expense';
+            var typeClass = t.ttype === '转账' ? 'tag-transfer' : t.ttype === '收入' ? 'tag-income' : t.ttype === '退款' ? 'tag-refund' : 'tag-expense';
+            var srcLabel = SOURCE_LABELS[t.source_type] || t.source_type;
+            var timeStr = t.date.length >= 16 ? t.date.slice(11, 16) : '';
+
+            html += '<div class="txn-row">';
+            html += '<span class="txn-time">' + timeStr + '</span>';
+            html += '<span class="txn-amount ' + amountClass + '">' + formatAmount(t.amount, t.ttype) + '</span>';
+            html += '<span class="txn-account">' + _highlightKeyword(t.account, keyword) + '</span>';
+            html += '<span class="txn-type ' + typeClass + '">' + t.ttype + '</span>';
+            html += '<span class="txn-category">' + _highlightKeyword(t.category1, keyword) + '</span>';
+            html += '<span class="txn-counterparty">' + _highlightKeyword(t.counterparty || '-', keyword) + '</span>';
+            html += '<span class="txn-source">' + srcLabel + '</span>';
+            html += '</div>';
+        }
+        if (allTxns.length > 0) html += '</div>';
+        if (allTxns.length === 0) {
+            html = '<div class="empty-state">无匹配的交易记录</div>';
+        }
+
+        document.getElementById('txnListBody').innerHTML = html;
+        _detectTruncation();
+    }
+
+    window._jumpToMonth = function(month) {
+        clearSearchMode();
+        currentMonth = month;
+        var sel = document.getElementById('monthSelect');
+        var titleEl = document.getElementById('monthTitle');
+        if (sel) sel.value = month;
+        if (titleEl) titleEl.textContent = _formatMonth(month);
+        render();
+    };
 
     var elasticOffset = 0;
     var elasticAccum = 0;
@@ -1028,9 +1315,14 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
 
         html += '</div>';
         document.getElementById('calendarGrid').innerHTML = html;
+        if (searchMode) {
+            document.getElementById('calendarGrid').style.display = 'none';
+            document.getElementById('calSearchHint').style.display = '';
+        }
     }
 
     function setFilter(type, value) {
+        if (searchMode) return;
         if (type === 'category') {
             currentFilter = {type: 'category', value: value, cat1: value, cat2: null};
         } else if (type === 'subcategory') {
@@ -1045,11 +1337,19 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
     function clearFilter() {
         currentFilter = {type: null, value: null, cat1: null, cat2: null};
         renderBreadcrumb();
-        renderTxnList(document.getElementById('txnSearch').value);
+        if (searchMode) {
+            renderSearchResults(document.getElementById('txnSearch').value.trim(), parseAmountFilter(amountFilterStr));
+        } else {
+            renderTxnList(document.getElementById('txnSearch').value);
+        }
     }
 
     function renderBreadcrumb() {
         var el = document.getElementById('filterBreadcrumb');
+        if (searchMode) {
+            el.innerHTML = '<span class="bc-item bc-current">搜索模式</span>';
+            return;
+        }
         if (!currentFilter.type) {
             el.innerHTML = '<span class="bc-item bc-current">全部流水</span>';
             return;
@@ -1280,11 +1580,17 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         var idx = ALL_MONTHS.indexOf(currentMonth);
         var prevMonth = idx < ALL_MONTHS.length - 1 ? ALL_MONTHS[idx + 1] : null;
         selectedDate = null;
-        currentFilter = {type: null, value: null, cat1: null, cat2: null};
+        if (!searchMode) {
+            currentFilter = {type: null, value: null, cat1: null, cat2: null};
+        }
         renderCards(md, prevMonth);
         renderCalendar();
         renderBreadcrumb();
-        renderTxnList(document.getElementById('txnSearch').value);
+        if (searchMode) {
+            renderSearchResults(document.getElementById('txnSearch').value.trim(), parseAmountFilter(amountFilterStr));
+        } else {
+            renderTxnList(document.getElementById('txnSearch').value);
+        }
         renderExpensePie(md);
         renderAccount(md);
         renderBalance();
@@ -1326,8 +1632,50 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
             return;
         }
         currentMonth = ALL_MONTHS[0];
+
+        function _triggerSearch() {
+            if (isSearchActive()) {
+                renderSearchResults(document.getElementById('txnSearch').value.trim(), parseAmountFilter(amountFilterStr));
+            } else {
+                if (searchMode) exitSearchMode();
+                renderTxnList(document.getElementById('txnSearch').value);
+            }
+        }
+
         document.getElementById('txnSearch').addEventListener('input', function() {
-            renderTxnList(this.value);
+            if (_searchDebounceTimer) clearTimeout(_searchDebounceTimer);
+            _searchDebounceTimer = setTimeout(function() {
+                _searchDebounceTimer = null;
+                _triggerSearch();
+            }, 200);
+        });
+        document.getElementById('amountFilter').addEventListener('input', function() {
+            if (_searchDebounceTimer) clearTimeout(_searchDebounceTimer);
+            _searchDebounceTimer = setTimeout(function() {
+                _searchDebounceTimer = null;
+                amountFilterStr = document.getElementById('amountFilter').value.trim();
+                _triggerSearch();
+            }, 200);
+        });
+        document.querySelectorAll('.type-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                typeFilter = this.getAttribute('data-type');
+                document.querySelectorAll('.type-btn').forEach(function(b) {
+                    b.classList.toggle('active', b.getAttribute('data-type') === typeFilter);
+                });
+                _triggerSearch();
+            });
+        });
+        document.getElementById('dateFrom').addEventListener('change', function() {
+            dateRangeFilter.from = this.value;
+            _triggerSearch();
+        });
+        document.getElementById('dateTo').addEventListener('change', function() {
+            dateRangeFilter.to = this.value;
+            _triggerSearch();
+        });
+        document.getElementById('filterResetBtn').addEventListener('click', function() {
+            clearSearchMode();
         });
         window.addEventListener('resize', function() {
             if (expensePieChart) expensePieChart.resize();
