@@ -4,21 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>泡泡君的自动账本</title>
-<meta name="secure-template-version" content='secure-template-version-3.8' />
+<meta name="secure-template-version" content='secure-template-version-7.1' />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='3' y='14' width='5' height='15' rx='1' fill='%23EA8379'/><rect x='10' y='8' width='5' height='21' rx='1' fill='%23299D8F'/><rect x='17' y='18' width='5' height='11' rx='1' fill='%23EA8379' opacity='.65'/><rect x='24' y='4' width='5' height='25' rx='1' fill='%23299D8F' opacity='.65'/><polyline points='4,12 12,6 20,16 28,2' fill='none' stroke='%232D3436' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>" type="image/svg+xml">
 <script src="./crypto-js.min.js"></script>
 <script src="./echarts.min.js"></script>
+<script src="./tailwindcss.min.js"></script>
 <style>
 :root {
     --bg-page: #F5F7F9;
     --bg-card: #FFFFFF;
-    --text-primary: #2D3436;
-    --text-secondary: #636E72;
-    --text-muted: #B2BEC3;
-    --border-light: #F1F2F6;
-    --expense: #EA8379;
-    --income: #299D8F;
-    --shadow-card: 0 4px 12px rgba(0,0,0,0.05);
+    --text-primary: #1E293B;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --border-light: #E2E8F0;
+    --expense: #EF4444;
+    --income: #10B981;
+    --shadow-card: 0 4px 12px rgba(0,0,0,0.06);
     --radius: 12px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -87,16 +88,14 @@ h1 {
     display: flex; gap: 24px; align-items: flex-start; overflow: hidden;
 }
 .left-col {
-    flex: 1; min-width: 0;
+    flex: 0 0 calc(50% - 12px); max-width: calc(50% - 12px); min-width: 0;
 }
 .right-col {
-    flex: 0 0 560px; max-width: 560px; min-width: 0; overflow-x: hidden;
+    flex: 0 0 calc(50% - 12px); max-width: calc(50% - 12px); min-width: 0; overflow-x: hidden;
     position: sticky; top: 16px; height: calc(100vh - 32px);
     display: flex; flex-direction: column;
 }
 .right-col .section { margin-bottom: 0; }
-.cal-search-wrap { flex-shrink: 0; margin-bottom: 0; display: flex; align-items: center; gap: 8px; }
-.cal-search-wrap .search-box { margin: 12px 0; flex: 1; }
 #fullTxnSection {
     flex: 1; overflow-y: auto; min-height: 0;
     scrollbar-width: thin; scrollbar-color: var(--border-light) transparent;
@@ -231,6 +230,107 @@ h1 {
 .bal-name { color: var(--text-primary); font-weight: 500; }
 .bal-hint { text-align: center; padding: 24px 20px; color: var(--text-muted); font-size: 13px; }
 
+/* household fund flow modal */
+.household-btn {
+    position: absolute; right: 0; padding: 8px 18px; border-radius: 20px;
+    border: 1px solid var(--border-light); background: var(--bg-card);
+    color: var(--text-secondary); font-size: 13px; font-weight: 500;
+    cursor: pointer; box-shadow: var(--shadow-card); transition: all .2s;
+    white-space: nowrap;
+}
+.household-btn:hover { background: var(--income); color: #fff; border-color: var(--income); }
+.hh-modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45); z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+}
+.hh-modal-panel {
+    background: var(--bg-card); border-radius: 16px;
+    width: 90%; max-width: 900px; max-height: 85vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+.hh-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px 16px; border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+}
+.hh-modal-title { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.hh-modal-close {
+    width: 32px; height: 32px; border: none; background: var(--bg-page);
+    border-radius: 50%; font-size: 20px; color: var(--text-secondary);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+}
+.hh-modal-close:hover { background: var(--expense); color: #fff; }
+.hh-modal-year-tabs {
+    display: flex; gap: 0; padding: 12px 24px 0; flex-shrink: 0;
+    border-bottom: 2px solid var(--border-light);
+}
+.hh-year-tab {
+    padding: 8px 20px; font-size: 14px; font-weight: 500;
+    color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -2px; transition: all .15s;
+}
+.hh-year-tab:hover { color: var(--text-primary); }
+.hh-year-tab.active { color: var(--income); border-bottom-color: var(--income); font-weight: 600; }
+.hh-modal-month-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    padding: 16px 24px; flex-shrink: 0;
+}
+.hh-month-card {
+    background: var(--bg-page); border-radius: 10px; padding: 12px;
+    cursor: pointer; transition: all .15s; border: 2px solid transparent;
+    text-align: center;
+}
+.hh-month-card:hover { background: var(--bg-card); box-shadow: var(--shadow-card); }
+.hh-month-card.active { border-color: var(--income); background: #E8F5F2; }
+.hh-month-card.hh-no-data { opacity: 0.5; cursor: default; }
+.hh-month-card.hh-no-data:hover { background: var(--bg-page); box-shadow: none; }
+.hh-mc-name { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+.hh-income-tag { display: inline-block; border-radius: 10px; font-size: 11px; padding: 2px 8px; margin-bottom: 3px; font-weight: 500; }
+.hh-tag-ok { background: #D1FAE5; color: #065F46; }
+.hh-tag-err { background: #FEE2E2; color: #991B1B; }
+.hh-modal-content {
+    flex: 1; overflow-y: auto; padding: 20px 24px 24px;
+    min-height: 0;
+}
+.hh-modal-content::-webkit-scrollbar { width: 6px; }
+.hh-modal-content::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+.hh-summary-row {
+    display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;
+    padding: 12px 16px; background: var(--bg-page); border-radius: 10px;
+}
+.hh-summary-item { display: flex; flex-direction: column; gap: 2px; }
+.hh-summary-label { font-size: 11px; color: var(--text-muted); }
+.hh-summary-value { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hh-status-indicator {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 12px;
+}
+.hh-ind-ok { background: #E8F5F2; color: var(--income); }
+.hh-ind-pending { background: #FFF0EE; color: var(--expense); }
+.hh-ind-suspect { background: #FFF8E1; color: #F0A500; }
+.hh-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; margin-bottom: 20px; }
+.hh-table th { text-align: left; padding: 8px 10px; font-weight: 500; font-size: 12px; color: var(--text-muted); border-bottom: 2px solid var(--border-light); background: var(--bg-page); }
+.hh-table th:not(:first-child) { text-align: right; }
+.hh-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-light); color: var(--text-secondary); }
+.hh-table td:not(:first-child) { text-align: right; }
+.hh-type-tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.hh-tag-salary { background: #E3F2FD; color: #1565C0; }
+.hh-tag-fund { background: #E8F5E9; color: #2E7D32; }
+.hh-tag-bonus { background: #FFF3E0; color: #E65100; }
+.hh-status-icon { font-size: 13px; font-weight: 600; }
+.hh-icon-ok { color: var(--income); }
+.hh-icon-pending { color: var(--expense); }
+.hh-icon-suspect { color: #F0A500; }
+.hh-reimb-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 16px 0 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
+@media (max-width: 768px) {
+    .hh-modal-panel { width: 100%; max-width: 100%; max-height: 100vh; border-radius: 0; }
+    .hh-modal-month-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
 /* calendar */
 #calendarSection { background: var(--bg-card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-card); margin-bottom: 20px; }
 .cal-cell {
@@ -263,13 +363,6 @@ h1 {
     display: flex; align-items: center; gap: 8px; padding: 0 0 4px; flex-wrap: nowrap;
     font-size: 12px; overflow-x: auto;
 }
-.filter-row input[type="text"] {
-    width: 110px; padding: 4px 8px; border: 1px solid var(--border-light);
-    border-radius: 12px; font-size: 12px; outline: none; background: var(--bg-card);
-    color: var(--text-primary); flex-shrink: 0;
-}
-.filter-row input[type="text"]:focus { border-color: var(--income); }
-.filter-row input[type="text"]::placeholder { color: var(--text-muted); font-size: 11px; }
 .type-btn-group { display: flex; gap: 0; flex-shrink: 0; }
 .type-btn {
     padding: 3px 8px; border: 1px solid var(--border-light); background: var(--bg-card);
@@ -280,12 +373,6 @@ h1 {
 .type-btn:last-child { border-radius: 0 10px 10px 0; }
 .type-btn:not(:first-child) { margin-left: -1px; }
 .type-btn.active { background: var(--income); color: #fff; border-color: var(--income); z-index: 1; }
-.filter-row input[type="month"] {
-    width: 120px; padding: 3px 6px; border: 1px solid var(--border-light);
-    border-radius: 10px; font-size: 11px; outline: none; background: var(--bg-card);
-    color: var(--text-primary); flex-shrink: 0;
-}
-.filter-row input[type="month"]:focus { border-color: var(--income); }
 .filter-reset-btn {
     padding: 3px 10px; border: 1px solid var(--border-light); border-radius: 10px;
     font-size: 11px; cursor: pointer; color: var(--text-muted); background: var(--bg-card);
@@ -318,11 +405,231 @@ h1 {
 .month-group-header .mgh-hint { font-size: 11px; font-weight: 400; color: var(--text-muted); }
 .month-group-header:first-child { margin-top: 0; }
 
-/* search mode calendar hint */
-.cal-search-hint {
-    text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 14px;
+/* search mode calendar hint - removed */
+
+/* global filter bar */
+.global-filter-bar {
+    max-width: 680px;
+    margin: 0 auto 24px;
+    text-align: center;
 }
-.cal-search-hint .cal-search-hint-icon { font-size: 28px; margin-bottom: 8px; }
+.global-filter-bar .search-box input {
+    max-width: 100%;
+    border-radius: 24px;
+    padding: 12px 20px 12px 36px;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.global-filter-bar .filter-row {
+    justify-content: center;
+    margin-top: 8px;
+}
+.global-filter-bar .search-summary {
+    margin-top: 8px;
+}
+
+/* calendar dimmed for search */
+.cal-dimmed {
+    opacity: 0.25 !important;
+    pointer-events: none !important;
+}
+
+/* segmented tabs */
+.seg-tabs {
+    display: flex;
+    background: var(--bg-page);
+    border-radius: 10px;
+    padding: 3px;
+    margin-bottom: 20px;
+    gap: 0;
+}
+.seg-tab {
+    flex: 1;
+    padding: 8px 0;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .2s;
+}
+.seg-tab.active {
+    background: var(--income);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(16,185,129,0.3);
+}
+.seg-tab:not(.active):hover {
+    color: var(--text-secondary);
+}
+
+/* toast */
+#toastContainer {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+}
+.toast-item {
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+    pointer-events: auto;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+.toast-item.fade-out {
+    opacity: 0;
+}
+.toast-icon {
+    color: var(--income);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* mobile bottom nav */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9990;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border-light);
+    padding: 6px 0;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+}
+.mobile-nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: color .2s;
+}
+.mobile-nav-btn.active {
+    color: var(--income);
+}
+.mobile-nav-btn svg {
+    stroke: currentColor;
+}
+
+/* txn row — minimalist three-column layout */
+.txn-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 4px;
+    gap: 12px;
+    border-bottom: 1px solid #F8FAFC;
+    position: relative;
+    transition: background 0.15s ease;
+}
+.txn-row:last-child { border-bottom: none; }
+.txn-row:hover { background: rgba(248,250,252,0.8); }
+.txn-row:hover .copy-btn { opacity: 1; }
+.txn-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    min-width: 0;
+    position: relative;
+}
+.txn-cat-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #F1F5F9;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+.txn-cat-name {
+    font-size: 14px;
+    font-weight: 400;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+}
+.txn-dot-verified {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #60A5FA;
+    position: absolute;
+    top: -1px;
+    left: 24px;
+}
+.txn-meta {
+    flex: 1;
+    font-size: 12px;
+    color: #94A3B8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+.txn-meta-sep {
+    margin: 0 4px;
+    color: #CBD5E1;
+}
+.txn-amount-lg {
+    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-size: 18px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.amt-expense { color: #EF4444; }
+.amt-income { color: #10B981; }
+.amt-refund { color: #94A3B8; }
+.amt-transfer { color: #818CF8; }
+.copy-btn {
+    opacity: 0;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: 2px 6px;
+    cursor: pointer;
+    transition: opacity 0.15s, color .15s, border-color .15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.copy-btn:hover { background: var(--bg-page); color: var(--text-primary); }
+.copy-btn.copied { color: var(--income); border-color: var(--income); }
 
 /* mark highlight */
 mark {
@@ -342,32 +649,6 @@ mark {
     display: flex; align-items: center; gap: 8px;
 }
 .day-total { font-size: 12px; font-weight: 400; color: var(--text-muted); }
-.txn-row {
-    display: flex; align-items: center; padding: 10px 4px; gap: 10px;
-    border-bottom: 1px solid var(--border-light); font-size: 13px;
-}
-.txn-row:last-child { border-bottom: none; }
-.txn-time { flex: 0 0 44px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.txn-amount { flex: 0 0 80px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
-.amt-expense { color: var(--expense); }
-.amt-income { color: var(--income); }
-.amt-refund { color: var(--text-secondary); }
-.txn-account { flex: 0 0 80px; color: var(--text-secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.txn-type {
-    flex: 0 0 36px; font-size: 11px; padding: 2px 6px; border-radius: 4px;
-    font-weight: 500; text-align: center;
-}
-.tag-expense { background: #FFF0EE; color: var(--expense); }
-.tag-income { background: #E8F5F2; color: var(--income); }
-.tag-refund { background: var(--bg-page); color: var(--text-secondary); }
-.tag-transfer { background: #EEF0F5; color: #636E72; }
-.amt-transfer { color: #6C7A89; }
-.txn-category { flex: 0 0 60px; color: var(--text-secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.txn-counterparty { flex: 1; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.txn-source {
-    flex: 0 0 44px; font-size: 10px; color: var(--text-muted); background: var(--bg-page);
-    padding: 1px 5px; border-radius: 3px; text-align: center;
-}
 .txn-tooltip {
     position: fixed; z-index: 1000; background: rgba(0,0,0,0.8); color: #fff;
     padding: 4px 10px; border-radius: 4px; font-size: 12px; max-width: 300px;
@@ -415,8 +696,6 @@ mark {
 }
 @media (min-width: 1024px) and (max-width: 1199px) {
     .two-col { overflow: hidden; }
-    .left-col { flex: 0 0 50%; max-width: 50%; }
-    .right-col { flex: 1; max-width: none; min-width: 0; }
     #fullTxnSection { overflow-x: auto; }
 }
 @media (max-width: 1023px) {
@@ -427,6 +706,8 @@ mark {
         max-width: 100%;
     }
     #fullTxnSection { max-height: 60vh; overflow-x: hidden; }
+    .mobile-bottom-nav { display: flex; }
+    body { padding-bottom: 64px; }
 }
 
 /* lock modal */
@@ -498,7 +779,7 @@ mark {
     <div class="loading-error" id="loadingError"></div>
 </div>
 <div class="container">
-    <h1><span class="title-row"><svg width="28" height="28" viewBox="0 0 32 32" style="vertical-align:middle;margin-right:8px"><rect x="3" y="14" width="5" height="15" rx="1" fill="#EA8379"/><rect x="10" y="8" width="5" height="21" rx="1" fill="#299D8F"/><rect x="17" y="18" width="5" height="11" rx="1" fill="#EA8379" opacity=".65"/><rect x="24" y="4" width="5" height="25" rx="1" fill="#299D8F" opacity=".65"/><polyline points="4,12 12,6 20,16 28,2" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>泡泡君的自动账本<span class="version-badge">v3.8</span></span>
+    <h1><span class="title-row"><svg width="28" height="28" viewBox="0 0 32 32" style="vertical-align:middle;margin-right:8px"><rect x="3" y="14" width="5" height="15" rx="1" fill="#EA8379"/><rect x="10" y="8" width="5" height="21" rx="1" fill="#299D8F"/><rect x="17" y="18" width="5" height="11" rx="1" fill="#EA8379" opacity=".65"/><rect x="24" y="4" width="5" height="25" rx="1" fill="#299D8F" opacity=".65"/><polyline points="4,12 12,6 20,16 28,2" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>泡泡君的自动账本<span class="version-badge">v7.1</span></span>
     <div class="data-freshness-badge" id="freshnessBadge" style="display:none;">
         <span id="freshnessText"></span>
         <div class="freshness-tooltip" id="freshnessTooltip"></div>
@@ -509,6 +790,24 @@ mark {
         <span class="month-title" id="monthTitle"></span>
         <select id="monthSelect"></select>
         <button id="nextMonth" title="下月">&rsaquo;</button>
+        <button id="householdBtn" class="household-btn" style="display:none;" title="家庭资金流">家庭资金</button>
+    </div>
+
+    <div class="global-filter-bar">
+        <div class="search-box">
+            <input id="txnSearch" type="text" placeholder="🔍 搜索交易：对方名称、分类、账户...">
+        </div>
+        <div class="filter-row" id="filterRow">
+            <div class="type-btn-group">
+                <span class="type-btn active" data-type="全部">全部</span>
+                <span class="type-btn" data-type="支出">支出</span>
+                <span class="type-btn" data-type="收入">收入</span>
+                <span class="type-btn" data-type="退款">退款</span>
+                <span class="type-btn" data-type="转账">转账</span>
+            </div>
+            <span class="filter-reset-btn" id="filterResetBtn">重置</span>
+        </div>
+        <div class="search-summary" id="searchSummary"></div>
     </div>
 
     <div class="two-col">
@@ -533,42 +832,58 @@ mark {
 
             <div class="section" id="calendarSection">
                 <div id="calendarGrid"></div>
-                <div id="calSearchHint" class="cal-search-hint" style="display:none;">
-                    <div class="cal-search-hint-icon">🔍</div>
-                    <div>搜索模式</div>
-                    <div style="font-size:12px;margin-top:4px;">清空搜索框和筛选器恢复日历</div>
-                </div>
             </div>
 
-            <div class="section">
-                <div class="section-title">支出分类分析</div>
-                <div class="chart-row">
-                    <div class="chart-box" id="expensePieChart"></div>
-                    <div class="chart-box-side">
-                        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;font-weight:500;">支出 TOP 5</div>
-                        <ul class="rank-list" id="top5List"></ul>
+            <div class="seg-tabs" id="segTabs">
+                <button class="seg-tab active" data-tab="consume">消费统计</button>
+                <button class="seg-tab" data-tab="assets">资产账户</button>
+            </div>
+
+            <div id="consumeTab" class="tab-panel">
+                <div class="section">
+                    <div class="section-title">支出分类分析</div>
+                    <div class="chart-row">
+                        <div class="chart-box" id="expensePieChart"></div>
+                        <div class="chart-box-side">
+                            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;font-weight:500;">支出 TOP 5</div>
+                            <ul class="rank-list" id="top5List"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="drilldownSection" style="display:none;">
+                    <div class="section-title" id="drilldownTitle">二级分类</div>
+                    <div class="chart-row">
+                        <div class="chart-box" id="subPieChart"></div>
+                        <div id="subDetails" style="flex:1;min-width:240px;"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="section" id="drilldownSection" style="display:none;">
-                <div class="section-title" id="drilldownTitle">二级分类</div>
-                <div class="chart-row">
-                    <div class="chart-box" id="subPieChart"></div>
-                    <div id="subDetails" style="flex:1;min-width:240px;"></div>
+            <div id="assetsTab" class="tab-panel" style="display:none;">
+                <div class="section">
+                    <div class="section-title">账户支出分布</div>
+                    <div class="chart-row">
+                        <div class="chart-box" id="accountChart"></div>
+                    </div>
+                </div>
+
+                <div class="section" id="balanceSection">
+                    <div class="section-title">月末账户余额</div>
+                    <div id="balanceBody"></div>
                 </div>
             </div>
 
-            <div class="section">
-                <div class="section-title">账户支出分布</div>
-                <div class="chart-row">
-                    <div class="chart-box" id="accountChart"></div>
+            <div class="hh-modal-overlay" id="hhModalOverlay" style="display:none;">
+                <div class="hh-modal-panel">
+                    <div class="hh-modal-header">
+                        <span class="hh-modal-title">家庭资金流</span>
+                        <button class="hh-modal-close" id="hhModalClose">&times;</button>
+                    </div>
+                    <div class="hh-modal-year-tabs" id="hhYearTabs"></div>
+                    <div class="hh-modal-month-grid" id="hhMonthGrid"></div>
+                    <div class="hh-modal-content" id="hhModalContent"></div>
                 </div>
-            </div>
-
-            <div class="section" id="balanceSection">
-                <div class="section-title">月末账户余额</div>
-                <div id="balanceBody"></div>
             </div>
 
             <div class="footer" id="footerInfo"></div>
@@ -576,31 +891,24 @@ mark {
 
         <div class="right-col">
             <div id="filterBreadcrumb"></div>
-            <div class="cal-search-wrap">
-                <div class="search-box">
-                    <input id="txnSearch" type="text" placeholder="搜索交易：对方名称、分类、账户...">
-                </div>
-            </div>
-            <div class="filter-row" id="filterRow">
-                <input id="amountFilter" type="text" placeholder=">100 / <50 / 100-500">
-                <div class="type-btn-group">
-                    <span class="type-btn active" data-type="全部">全部</span>
-                    <span class="type-btn" data-type="支出">支出</span>
-                    <span class="type-btn" data-type="收入">收入</span>
-                    <span class="type-btn" data-type="退款">退款</span>
-                    <span class="type-btn" data-type="转账">转账</span>
-                </div>
-                <input id="dateFrom" type="month" title="起始月份">
-                <span style="color:var(--text-muted);font-size:11px;flex-shrink:0;">~</span>
-                <input id="dateTo" type="month" title="结束月份">
-                <span class="filter-reset-btn" id="filterResetBtn">重置</span>
-            </div>
-            <div class="search-summary" id="searchSummary"></div>
             <div class="txn-section" id="fullTxnSection" tabindex="0">
                 <div id="txnListBody"></div>
             </div>
         </div>
     </div>
+
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <button class="mobile-nav-btn active" data-view="dashboard">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            <span>资产看板</span>
+        </button>
+        <button class="mobile-nav-btn" data-view="transactions">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span>交易明细</span>
+        </button>
+    </nav>
+
+    <div id="toastContainer"></div>
 </div>
 
 <script src="./data.js"></script>
@@ -667,13 +975,10 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
 })();
 
 (function() {
-    var C_EXPENSE = '#EA8379';
-    var C_INCOME = '#299D8F';
+    var C_EXPENSE = '#EF4444';
+    var C_INCOME = '#10B981';
 
-    var PALETTE = [];
-    for (var i = 0; i < 20; i++) {
-        PALETTE.push('hsl(' + (i * 47 + 200) % 360 + ', 45%, 65%)');
-    }
+    var PALETTE = ['#3B82F6','#8B5CF6','#EC4899','#F59E0B','#10B981','#06B6D4','#F97316','#6366F1','#14B8A6','#E11D48','#84CC16','#A855F7','#0EA5E9','#D946EF','#22D3EE','#FB923C','#34D399','#818CF8','#FB7185','#FBBF24'];
 
     var selectedDate = null;
     var currentMonth = null;
@@ -683,39 +988,20 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
 
     var searchMode = false;
     var savedFilter = null;
-    var amountFilterStr = '';
     var typeFilter = '全部';
-    var dateRangeFilter = {from: '', to: ''};
     var _searchDebounceTimer = null;
 
     function isSearchActive() {
         var keyword = document.getElementById('txnSearch').value.trim();
         if (keyword) return true;
-        if (amountFilterStr) return true;
         if (typeFilter !== '全部') return true;
-        if (dateRangeFilter.from || dateRangeFilter.to) return true;
         return false;
-    }
-
-    function parseAmountFilter(str) {
-        str = str.trim();
-        if (!str) return null;
-        var m;
-        m = str.match(/^>\s*([\d.]+)$/);
-        if (m) { var v = parseFloat(m[1]); if (!isNaN(v)) return function(a) { return a > v; }; }
-        m = str.match(/^<\s*([\d.]+)$/);
-        if (m) { var v2 = parseFloat(m[1]); if (!isNaN(v2)) return function(a) { return a < v2; }; }
-        m = str.match(/^([\d.]+)\s*[-~]\s*([\d.]+)$/);
-        if (m) { var lo = parseFloat(m[1]), hi = parseFloat(m[2]); if (!isNaN(lo) && !isNaN(hi) && lo <= hi) return function(a) { return a >= lo && a <= hi; }; }
-        return null;
     }
 
     function enterSearchMode() {
         if (searchMode) return;
         searchMode = true;
         savedFilter = {type: currentFilter.type, value: currentFilter.value, cat1: currentFilter.cat1, cat2: currentFilter.cat2};
-        document.getElementById('calendarGrid').style.display = 'none';
-        document.getElementById('calSearchHint').style.display = '';
     }
 
     function exitSearchMode() {
@@ -724,24 +1010,18 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
             currentFilter = savedFilter;
             savedFilter = null;
         }
-        document.getElementById('calendarGrid').style.display = '';
-        document.getElementById('calSearchHint').style.display = 'none';
+        _clearCalendarDimmed();
         document.getElementById('searchSummary').classList.remove('visible');
         document.getElementById('txnSearch').classList.remove('filter-active');
     }
 
     function clearSearchMode() {
         document.getElementById('txnSearch').value = '';
-        amountFilterStr = '';
         typeFilter = '全部';
-        dateRangeFilter = {from: '', to: ''};
-        document.getElementById('amountFilter').value = '';
         var btns = document.querySelectorAll('.type-btn');
         for (var i = 0; i < btns.length; i++) {
             btns[i].classList.toggle('active', btns[i].getAttribute('data-type') === '全部');
         }
-        document.getElementById('dateFrom').value = '';
-        document.getElementById('dateTo').value = '';
         exitSearchMode();
         renderTxnList('');
     }
@@ -755,7 +1035,75 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         return text.substring(0, idx) + '<mark>' + text.substring(idx, idx + kw.length) + '</mark>' + text.substring(idx + kw.length);
     }
 
-    function renderSearchResults(keyword, amtFilterFn) {
+    function _getCatIcon(category) {
+        if (!category) return '·';
+        var emojiMap = {
+            '餐饮': '🍜', '外卖': '🛵', '早餐': '🥐', '午餐': '🍱', '晚餐': '🍽',
+            '交通': '🚌', '打车': '🚕', '地铁': '🚇', '公交': '🚌', '加油': '⛽',
+            '购物': '🛒', '日用': '🏠', '服饰': '👔', '数码': '📱', '家电': '📺',
+            '住房': '🏡', '租金': '🔑', '水电': '💧', '物业': '🏢',
+            '医疗': '🏥', '药品': '💊', '运动': '🏃', '健身': '💪',
+            '娱乐': '🎮', '电影': '🎬', '游戏': '🎯', '音乐': '🎵',
+            '教育': '📚', '书籍': '📖', '课程': '🎓',
+            '社交': '💬', '礼物': '🎁', '红包': '🧧',
+            '旅行': '✈️', '酒店': '🏨', '机票': '🎫',
+            '工资': '💰', '理财': '📈', '转账': '↔️', '报销': '📋',
+            '水果': '🍎', '零食': '🍪', '饮品': '🧋', '咖啡': '☕',
+            '宠物': '🐾', '美容': '💇', '理发': '✂️',
+            '快递': '📦', '话费': '📞', '保险': '🛡',
+        };
+        if (emojiMap[category]) return emojiMap[category];
+        return category.charAt(0);
+    }
+
+    function _buildSourceText(t) {
+        var allSources = t.all_sources || [t.source_type];
+        var parts = [];
+        for (var si = 0; si < allSources.length; si++) {
+            parts.push(SOURCE_LABELS[allSources[si]] || allSources[si]);
+        }
+        return parts.join(' | ');
+    }
+
+    function _buildTxnRowHtml(t, keyword) {
+        var amtClass = t.ttype === '转账' ? 'amt-transfer' : t.ttype === '收入' ? 'amt-income' : t.ttype === '退款' ? 'amt-refund' : 'amt-expense';
+        var timeStr = t.date.length >= 16 ? t.date.slice(11, 16) : '';
+        var isTransferPair = t.ttype === '转账' && t.account.indexOf('→') >= 0;
+
+        var catRaw = isTransferPair ? '转账' : (t.category1 || t.category2 || t.counterparty || '');
+        var catIcon = _getCatIcon(isTransferPair ? '转账' : (t.category1 || t.category2 || ''));
+        var catName = _highlightKeyword(catRaw || '-', keyword);
+        var cpDisplay = isTransferPair ? _highlightKeyword(t.account, keyword) : _highlightKeyword(t.counterparty || '', keyword);
+        var isMultiSource = t.all_sources && t.all_sources.length > 1;
+        var sourceText = _buildSourceText(t);
+        var flowLabel = t.flow_label || '';
+
+        var html = '<div class="txn-row">';
+        html += '<div class="txn-left">';
+        if (isMultiSource) html += '<span class="txn-dot-verified"></span>';
+        html += '<span class="txn-cat-icon">' + catIcon + '</span>';
+        html += '<span class="txn-cat-name">' + catName + '</span>';
+        html += '</div>';
+
+        var metaParts = [];
+        if (timeStr) metaParts.push(timeStr);
+        metaParts.push(sourceText);
+        if (cpDisplay) metaParts.push(cpDisplay);
+        if (flowLabel) metaParts.push(flowLabel);
+        var metaHtml = '';
+        for (var mi = 0; mi < metaParts.length; mi++) {
+            if (mi > 0) metaHtml += '<span class="txn-meta-sep">|</span>';
+            metaHtml += metaParts[mi];
+        }
+        html += '<span class="txn-meta">' + metaHtml + '</span>';
+
+        html += '<span class="txn-amount-lg ' + amtClass + '">' + formatAmount(t.amount, t.ttype) + '</span>';
+        html += '<button class="copy-btn" onclick="window._copyTxnRef(this,' + t.id + ')" title="复制交易引用">复制</button>';
+        html += '</div>';
+        return html;
+    }
+
+    function renderSearchResults(keyword) {
         if (!detailsReady) {
             document.getElementById('txnListBody').innerHTML = '<div class="txn-hint">流水明细加载中，请稍候...</div>';
             return;
@@ -768,8 +1116,6 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
 
         for (var mi = 0; mi < months.length; mi++) {
             var month = months[mi];
-            if (dateRangeFilter.from && month < dateRangeFilter.from) continue;
-            if (dateRangeFilter.to && month > dateRangeFilter.to) continue;
             var days = Object.keys(TXN_DETAILS[month]);
             for (var di = 0; di < days.length; di++) {
                 var day = days[di];
@@ -783,7 +1129,6 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
                                     (t.account || '').toLowerCase().indexOf(kw) >= 0;
                         if (!match) continue;
                     }
-                    if (amtFilterFn && !amtFilterFn(Math.abs(t.amount))) continue;
                     if (typeFilter !== '全部' && t.ttype !== typeFilter) continue;
                     t._month = month;
                     t._day = day;
@@ -815,7 +1160,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         summaryEl.innerHTML = sumHtml;
         summaryEl.classList.add('visible');
 
-        var filterActive = amountFilterStr || typeFilter !== '全部' || dateRangeFilter.from || dateRangeFilter.to;
+        var filterActive = typeFilter !== '全部';
         document.getElementById('txnSearch').classList.toggle('filter-active', filterActive);
 
         var html = '';
@@ -841,20 +1186,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
                 html += '<div class="day-header">' + dayLabel + '</div>';
             }
 
-            var amountClass = t.ttype === '转账' ? 'amt-transfer' : t.ttype === '收入' ? 'amt-income' : t.ttype === '退款' ? 'amt-refund' : 'amt-expense';
-            var typeClass = t.ttype === '转账' ? 'tag-transfer' : t.ttype === '收入' ? 'tag-income' : t.ttype === '退款' ? 'tag-refund' : 'tag-expense';
-            var srcLabel = SOURCE_LABELS[t.source_type] || t.source_type;
-            var timeStr = t.date.length >= 16 ? t.date.slice(11, 16) : '';
-
-            html += '<div class="txn-row">';
-            html += '<span class="txn-time">' + timeStr + '</span>';
-            html += '<span class="txn-amount ' + amountClass + '">' + formatAmount(t.amount, t.ttype) + '</span>';
-            html += '<span class="txn-account">' + _highlightKeyword(t.account, keyword) + '</span>';
-            html += '<span class="txn-type ' + typeClass + '">' + t.ttype + '</span>';
-            html += '<span class="txn-category">' + _highlightKeyword(t.category1, keyword) + '</span>';
-            html += '<span class="txn-counterparty">' + _highlightKeyword(t.counterparty || '-', keyword) + '</span>';
-            html += '<span class="txn-source">' + srcLabel + '</span>';
-            html += '</div>';
+            html += _buildTxnRowHtml(t, keyword);
         }
         if (allTxns.length > 0) html += '</div>';
         if (allTxns.length === 0) {
@@ -863,6 +1195,12 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
 
         document.getElementById('txnListBody').innerHTML = html;
         _detectTruncation();
+
+        var hitDays = {};
+        for (var hi = 0; hi < allTxns.length; hi++) {
+            hitDays[allTxns[hi]._day] = true;
+        }
+        _applyCalendarDimmed(hitDays);
     }
 
     window._jumpToMonth = function(month) {
@@ -931,6 +1269,8 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
     var BALANCE_DATA = {};
     var CALENDAR_DATA = {};
     var SOURCE_LABELS = {};
+    var SOURCE_COLORS = {};
+    var HOUSEHOLD_DATA = {};
     var detailsReady = false;
 
     var d = window.__REPORT_DATA;
@@ -940,6 +1280,8 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         BALANCE_DATA = d.balance_data || {};
         CALENDAR_DATA = d.calendar_data || {};
         SOURCE_LABELS = d.source_labels || {};
+        SOURCE_COLORS = d.source_colors || {};
+        HOUSEHOLD_DATA = d.householdFundFlow || {};
     }
     var det = window.__REPORT_DETAILS;
     if (det) {
@@ -1066,32 +1408,33 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         });
         expensePieChart.setOption({
             tooltip: {
-                backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1,
-                textStyle: { color: '#2D3436', fontSize: 13 },
+                backgroundColor: 'rgba(0,0,0,0.75)', borderColor: 'transparent', borderWidth: 0,
+                textStyle: { color: '#fff', fontSize: 13 },
+                extraCssText: 'border-radius:8px;',
                 formatter: function(p) {
                     return '<b>' + p.name + '</b><br/>金额: ' + fmt(p.value) + '<br/>占比: ' + p.percent + '%';
                 }
             },
             color: PALETTE,
             series: [{
-                type: 'pie', radius: ['42%', '72%'], center: ['50%', '50%'],
+                type: 'pie', radius: ['45%', '70%'], center: ['50%', '50%'],
                 avoidLabelOverlap: true,
-                itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 3 },
+                itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 3 },
                 label: {
-                    color: '#636E72', formatter: '{b}\n{d}%', fontSize: 12
+                    color: '#475569', formatter: '{b}\n{d}%', fontSize: 12
                 },
                 emphasis: {
-                    label: { fontSize: 14, fontWeight: 'bold', color: '#2D3436' },
+                    label: { fontSize: 14, fontWeight: 'bold', color: '#1E293B' },
                     itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.08)' }
                 },
                 data: pieData
             }],
             graphic: [{
                 type: 'text', left: 'center', top: '44%',
-                style: { text: '总支出', fill: '#B2BEC3', fontSize: 12 }
+                style: { text: '总支出', fill: '#94A3B8', fontSize: 12 }
             }, {
                 type: 'text', left: 'center', top: '51%',
-                style: { text: fmt(total), fill: C_EXPENSE, fontSize: 16, fontWeight: 'bold' }
+                style: { text: fmt(total), fill: C_EXPENSE, fontSize: 22, fontWeight: 'bold' }
             }]
         });
 
@@ -1139,32 +1482,33 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         });
         subPieChart.setOption({
             tooltip: {
-                backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1,
-                textStyle: { color: '#2D3436', fontSize: 13 },
+                backgroundColor: 'rgba(0,0,0,0.75)', borderColor: 'transparent', borderWidth: 0,
+                textStyle: { color: '#fff', fontSize: 13 },
+                extraCssText: 'border-radius:8px;',
                 formatter: function(p) {
                     return '<b>' + p.name + '</b><br/>金额: ' + fmt(p.value) + '<br/>占比: ' + p.percent + '%';
                 }
             },
             color: PALETTE.slice(5),
             series: [{
-                type: 'pie', radius: ['38%', '68%'], center: ['50%', '50%'],
+                type: 'pie', radius: ['45%', '70%'], center: ['50%', '50%'],
                 avoidLabelOverlap: true,
-                itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 3 },
+                itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 3 },
                 label: {
-                    color: '#636E72', formatter: '{b}\n{d}%', fontSize: 12
+                    color: '#475569', formatter: '{b}\n{d}%', fontSize: 12
                 },
                 emphasis: {
-                    label: { fontSize: 14, fontWeight: 'bold', color: '#2D3436' },
+                    label: { fontSize: 14, fontWeight: 'bold', color: '#1E293B' },
                     itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.08)' }
                 },
                 data: pieData
             }],
             graphic: [{
                 type: 'text', left: 'center', top: '44%',
-                style: { text: cat1, fill: '#B2BEC3', fontSize: 12 }
+                style: { text: cat1, fill: '#94A3B8', fontSize: 12 }
             }, {
                 type: 'text', left: 'center', top: '51%',
-                style: { text: fmt(catTotal), fill: '#2D3436', fontSize: 15, fontWeight: 'bold' }
+                style: { text: fmt(catTotal), fill: '#1E293B', fontSize: 20, fontWeight: 'bold' }
             }]
         });
 
@@ -1231,6 +1575,224 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         body.innerHTML = html;
     }
 
+    function renderHouseholdFundFlow() {
+        var btn = document.getElementById('householdBtn');
+        if (!btn) return;
+        var hasData = Object.keys(HOUSEHOLD_DATA).length > 0;
+        btn.style.display = hasData ? '' : 'none';
+    }
+
+    var _hhModal = {
+        selectedYear: null,
+        selectedMonth: null,
+    };
+
+    function _hhOpenModal() {
+        var overlay = document.getElementById('hhModalOverlay');
+        if (!overlay) return;
+        overlay.style.display = '';
+        var years = _hhGetYears();
+        var now = new Date();
+        var curYear = String(now.getFullYear());
+        _hhModal.selectedYear = years.indexOf(curYear) >= 0 ? curYear : (years[0] || null);
+        var curMonth = String(now.getFullYear()) + '-' + String(now.getMonth()+1).padStart(2,'0');
+        _hhModal.selectedMonth = HOUSEHOLD_DATA[curMonth] ? curMonth : null;
+        _hhRenderYearTabs();
+        _hhRenderMonthGrid();
+        _hhRenderContent();
+        document.addEventListener('keydown', _hhOnEsc);
+    }
+
+    function _hhCloseModal() {
+        var overlay = document.getElementById('hhModalOverlay');
+        if (overlay) overlay.style.display = 'none';
+        document.removeEventListener('keydown', _hhOnEsc);
+    }
+
+    function _hhOnEsc(e) {
+        if (e.key === 'Escape') _hhCloseModal();
+    }
+
+    function _hhGetYears() {
+        var yearSet = {};
+        for (var m in HOUSEHOLD_DATA) {
+            yearSet[m.substring(0,4)] = true;
+        }
+        return Object.keys(yearSet).sort();
+    }
+
+    function _hhRenderYearTabs() {
+        var container = document.getElementById('hhYearTabs');
+        if (!container) return;
+        var years = _hhGetYears();
+        var html = '';
+        for (var i = 0; i < years.length; i++) {
+            var cls = years[i] === _hhModal.selectedYear ? ' active' : '';
+            html += '<span class="hh-year-tab' + cls + '" data-year="' + years[i] + '">' + years[i] + '</span>';
+        }
+        container.innerHTML = html;
+        var tabs = container.querySelectorAll('.hh-year-tab');
+        for (var i = 0; i < tabs.length; i++) {
+            tabs[i].addEventListener('click', function() {
+                _hhModal.selectedYear = this.getAttribute('data-year');
+                _hhModal.selectedMonth = null;
+                _hhRenderYearTabs();
+                _hhRenderMonthGrid();
+                _hhRenderContent();
+            });
+        }
+    }
+
+    function _hhRenderMonthGrid() {
+        var container = document.getElementById('hhMonthGrid');
+        if (!container) return;
+        var year = _hhModal.selectedYear;
+        var html = '';
+        for (var m = 1; m <= 12; m++) {
+            var monthKey = year + '-' + String(m).padStart(2,'0');
+            var hd = HOUSEHOLD_DATA[monthKey];
+            var isSelected = monthKey === _hhModal.selectedMonth;
+            if (hd && hd.rows && hd.rows.length > 0) {
+                var typeOrder = ['工资', '公积金', '年终奖'];
+                var typeMap = {};
+                for (var ri = 0; ri < hd.rows.length; ri++) {
+                    var r = hd.rows[ri];
+                    var tp = r.type;
+                    if (tp === '未分类收入' || tp === '其他') continue;
+                    if (!typeMap[tp]) typeMap[tp] = {amount: 0, status: 'matched'};
+                    typeMap[tp].amount += r.income_amount;
+                    var st = r.status || 'pending';
+                    var order = {suspect: 4, pending: 3, orphan: 2, matched: 1};
+                    if ((order[st] || 0) > (order[typeMap[tp].status] || 0)) {
+                        typeMap[tp].status = st;
+                    }
+                }
+                var cardClass = 'hh-month-card' + (isSelected ? ' active' : '');
+                html += '<div class="' + cardClass + '" data-month="' + monthKey + '">';
+                html += '<div class="hh-mc-name">' + m + '月</div>';
+                for (var ti = 0; ti < typeOrder.length; ti++) {
+                    var tagName = typeOrder[ti];
+                    var tagData = typeMap[tagName];
+                    if (!tagData) continue;
+                    var tagClass = tagData.status === 'matched' ? 'hh-tag-ok' : 'hh-tag-err';
+                    html += '<div><span class="hh-income-tag ' + tagClass + '">' + tagName + ' ' + fmt(tagData.amount) + '</span></div>';
+                }
+                html += '</div>';
+            } else {
+                var cardClass = 'hh-month-card hh-no-data' + (isSelected ? ' active' : '');
+                html += '<div class="' + cardClass + '">';
+                html += '<div class="hh-mc-name">' + m + '月</div>';
+                html += '<div class="hh-income-tag hh-tag-none" style="color:var(--text-muted);font-size:11px;">无数据</div>';
+                html += '</div>';
+            }
+        }
+        container.innerHTML = html;
+        var cards = container.querySelectorAll('.hh-month-card:not(.hh-no-data)');
+        for (var i = 0; i < cards.length; i++) {
+            cards[i].addEventListener('click', function() {
+                _hhModal.selectedMonth = this.getAttribute('data-month');
+                _hhRenderMonthGrid();
+                _hhRenderContent();
+            });
+        }
+    }
+
+    function _hhRenderContent() {
+        var container = document.getElementById('hhModalContent');
+        if (!container) return;
+        if (!_hhModal.selectedMonth) {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">请选择月份查看详情</div>';
+            return;
+        }
+        var hd = HOUSEHOLD_DATA[_hhModal.selectedMonth];
+        if (!hd || !hd.rows || hd.rows.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">该月份无家庭资金流数据</div>';
+            return;
+        }
+        var s = hd.summary;
+        var html = '';
+
+        var indicatorHtml = '';
+        if (s.all_transferred && s.suspect_count === 0) {
+            indicatorHtml = '<span class="hh-status-indicator hh-ind-ok">本月已全部归集</span>';
+        } else if (s.suspect_count > 0) {
+            indicatorHtml = '<span class="hh-status-indicator hh-ind-suspect">' + s.suspect_count + '笔疑似转错</span>';
+        } else {
+            indicatorHtml = '<span class="hh-status-indicator hh-ind-pending">' + s.pending_count + '笔待归集</span>';
+        }
+
+        html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">';
+        html += '<span style="font-size:16px;font-weight:700;color:var(--text-primary);">' + _formatMonth(_hhModal.selectedMonth) + '</span>';
+        html += indicatorHtml;
+        html += '</div>';
+
+        html += '<div class="hh-summary-row">';
+        html += '<div class="hh-summary-item"><span class="hh-summary-label">总收入</span><span class="hh-summary-value">' + fmt(s.total_income) + '</span></div>';
+        html += '<div class="hh-summary-item"><span class="hh-summary-label">已归集</span><span class="hh-summary-value" style="color:var(--income)">' + fmt(s.total_transferred) + '</span></div>';
+        html += '<div class="hh-summary-item"><span class="hh-summary-label">待归集</span><span class="hh-summary-value" style="color:' + (s.total_pending > 0 ? 'var(--expense)' : 'var(--text-muted)') + '">' + fmt(s.total_pending) + '</span></div>';
+        html += '<div class="hh-summary-item"><span class="hh-summary-label">报销合计</span><span class="hh-summary-value" style="color:var(--income)">' + fmt(s.total_reimbursement) + '</span></div>';
+        html += '</div>';
+
+        html += '<table class="hh-table"><thead><tr>';
+        html += '<th>类型</th><th>入账金额</th><th>入账日期</th><th>归集金额</th><th>归集日期</th><th>状态</th>';
+        html += '</tr></thead><tbody>';
+
+        hd.rows.forEach(function(r) {
+            var typeTag = r.type === '工资' ?
+                '<span class="hh-type-tag hh-tag-salary">工资</span>' :
+                (r.type === '年终奖' ?
+                    '<span class="hh-type-tag hh-tag-bonus">年终奖</span>' :
+                    (r.type === '未分类收入' ?
+                        '<span class="hh-type-tag" style="background:#F5F5F5;color:#999">未分类收入</span>' :
+                        (r.status === 'orphan' ?
+                            '<span class="hh-type-tag hh-tag-fund">' + (r.type || '其他') + '</span><span style="color:#b08600;font-size:0.85em">(收入缺失)</span>' :
+                            '<span class="hh-type-tag hh-tag-fund">' + (r.type || '其他') + '</span>')));
+            var statusHtml = '';
+            if (r.status === 'matched') {
+                statusHtml = '<span class="hh-status-icon hh-icon-ok">已归集</span>';
+            } else if (r.status === 'suspect') {
+                statusHtml = '<span class="hh-status-icon hh-icon-suspect">疑似转错</span>';
+            } else if (r.status === 'orphan') {
+                statusHtml = '<span class="hh-status-icon" style="color:#b08600">⚑已归集(收入缺失)</span>';
+            } else {
+                statusHtml = '<span class="hh-status-icon hh-icon-pending">待归集</span>';
+            }
+            var transferAmt = r.transfer_amount !== undefined ? fmt(r.transfer_amount) : '--';
+            var transferDate = r.transfer_date || '--';
+            var incomeAmt = r.status === 'orphan' ? '—' : fmt(r.income_amount);
+            var incomeDate = r.status === 'orphan' ? '—' : (r.income_date ? r.income_date.slice(5) : '--');
+            html += '<tr>';
+            html += '<td>' + typeTag + '</td>';
+            html += '<td>' + incomeAmt + '</td>';
+            html += '<td>' + incomeDate + '</td>';
+            html += '<td>' + transferAmt + '</td>';
+            html += '<td>' + (transferDate !== '--' ? transferDate.slice(5) : '--') + '</td>';
+            html += '<td>' + statusHtml + '</td>';
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+
+        var reimRows = hd.reimbursements || [];
+        if (reimRows.length > 0) {
+            html += '<div class="hh-reimb-title">报销明细</div>';
+            html += '<table class="hh-table"><thead><tr>';
+            html += '<th>日期</th><th>金额</th><th>对方</th><th>归属月份</th>';
+            html += '</tr></thead><tbody>';
+            reimRows.forEach(function(r) {
+                var monthLabel = r.reimbursement_month ? '归属 ' + r.reimbursement_month : '<span style="color:var(--text-muted)">月份待定</span>';
+                html += '<tr>';
+                html += '<td>' + (r.date ? r.date.slice(5) : '--') + '</td>';
+                html += '<td>' + fmt(Math.abs(r.amount)) + '</td>';
+                html += '<td style="text-align:left">' + (r.counterparty || '-') + '</td>';
+                html += '<td>' + monthLabel + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+        }
+
+        container.innerHTML = html;
+    }
+
     function renderAccount(md) {
         var accs = md.accounts;
         var entries = Object.entries(accs).sort(function(a,b) { return b[1] - a[1]; });
@@ -1252,22 +1814,23 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         }
         accountChart.setOption({
             tooltip: {
-                backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1,
-                textStyle: { color: '#2D3436', fontSize: 13 },
+                backgroundColor: 'rgba(0,0,0,0.75)', borderColor: 'transparent', borderWidth: 0,
+                textStyle: { color: '#fff', fontSize: 13 },
+                extraCssText: 'border-radius:8px;',
                 formatter: function(p) {
                     return '<b>' + p.name + '</b><br/>金额: ' + fmt(p.value) + '<br/>占比: ' + p.percent + '%';
                 }
             },
             color: PALETTE.slice(3, 11),
             series: [{
-                type: 'pie', radius: ['38%', '68%'], center: ['50%', '50%'],
+                type: 'pie', radius: ['45%', '70%'], center: ['50%', '50%'],
                 avoidLabelOverlap: true,
-                itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 3 },
+                itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 3 },
                 label: {
-                    color: '#636E72', formatter: '{b}\n{d}%', fontSize: 12
+                    color: '#475569', formatter: '{b}\n{d}%', fontSize: 12
                 },
                 emphasis: {
-                    label: { fontSize: 14, fontWeight: 'bold', color: '#2D3436' },
+                    label: { fontSize: 14, fontWeight: 'bold', color: '#1E293B' },
                     itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.08)' }
                 },
                 data: pieData
@@ -1315,9 +1878,24 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
 
         html += '</div>';
         document.getElementById('calendarGrid').innerHTML = html;
-        if (searchMode) {
-            document.getElementById('calendarGrid').style.display = 'none';
-            document.getElementById('calSearchHint').style.display = '';
+    }
+
+    function _applyCalendarDimmed(hitDays) {
+        var cells = document.querySelectorAll('#calendarGrid .cal-cell');
+        for (var i = 0; i < cells.length; i++) {
+            var d = cells[i].getAttribute('data-date');
+            if (hitDays[d]) {
+                cells[i].classList.remove('cal-dimmed');
+            } else {
+                cells[i].classList.add('cal-dimmed');
+            }
+        }
+    }
+
+    function _clearCalendarDimmed() {
+        var cells = document.querySelectorAll('#calendarGrid .cal-dimmed');
+        for (var i = 0; i < cells.length; i++) {
+            cells[i].classList.remove('cal-dimmed');
         }
     }
 
@@ -1338,7 +1916,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         currentFilter = {type: null, value: null, cat1: null, cat2: null};
         renderBreadcrumb();
         if (searchMode) {
-            renderSearchResults(document.getElementById('txnSearch').value.trim(), parseAmountFilter(amountFilterStr));
+            renderSearchResults(document.getElementById('txnSearch').value.trim());
         } else {
             renderTxnList(document.getElementById('txnSearch').value);
         }
@@ -1424,20 +2002,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
             html += '</span></div>';
 
             txns.forEach(function(t) {
-                var amountClass = t.ttype === '转账' ? 'amt-transfer' : t.ttype === '收入' ? 'amt-income' : t.ttype === '退款' ? 'amt-refund' : 'amt-expense';
-                var typeClass = t.ttype === '转账' ? 'tag-transfer' : t.ttype === '收入' ? 'tag-income' : t.ttype === '退款' ? 'tag-refund' : 'tag-expense';
-                var srcLabel = SOURCE_LABELS[t.source_type] || t.source_type;
-                var timeStr = t.date.length >= 16 ? t.date.slice(11, 16) : '';
-
-                html += '<div class="txn-row">';
-                html += '<span class="txn-time">' + timeStr + '</span>';
-                html += '<span class="txn-amount ' + amountClass + '">' + formatAmount(t.amount, t.ttype) + '</span>';
-                html += '<span class="txn-account">' + t.account + '</span>';
-                html += '<span class="txn-type ' + typeClass + '">' + t.ttype + '</span>';
-                html += '<span class="txn-category">' + t.category1 + '</span>';
-                html += '<span class="txn-counterparty">' + (t.counterparty || '-') + '</span>';
-                html += '<span class="txn-source">' + srcLabel + '</span>';
-                html += '</div>';
+                html += _buildTxnRowHtml(t, keyword);
             });
 
             html += '</div>';
@@ -1587,7 +2152,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         renderCalendar();
         renderBreadcrumb();
         if (searchMode) {
-            renderSearchResults(document.getElementById('txnSearch').value.trim(), parseAmountFilter(amountFilterStr));
+            renderSearchResults(document.getElementById('txnSearch').value.trim());
         } else {
             renderTxnList(document.getElementById('txnSearch').value);
         }
@@ -1619,6 +2184,21 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         tooltip.innerHTML = html;
     }
 
+    function showToast(message) {
+        var container = document.getElementById('toastContainer');
+        if (!container) return;
+        var el = document.createElement('div');
+        el.className = 'toast-item';
+        el.innerHTML = '<span class="toast-icon">✓</span>' + message;
+        container.appendChild(el);
+        setTimeout(function() {
+            el.classList.add('fade-out');
+            setTimeout(function() {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 300);
+        }, 1500);
+    }
+
     function init() {
         if (typeof echarts === 'undefined') {
             document.querySelector('.container').innerHTML =
@@ -1635,7 +2215,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
 
         function _triggerSearch() {
             if (isSearchActive()) {
-                renderSearchResults(document.getElementById('txnSearch').value.trim(), parseAmountFilter(amountFilterStr));
+                renderSearchResults(document.getElementById('txnSearch').value.trim());
             } else {
                 if (searchMode) exitSearchMode();
                 renderTxnList(document.getElementById('txnSearch').value);
@@ -1649,14 +2229,6 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
                 _triggerSearch();
             }, 200);
         });
-        document.getElementById('amountFilter').addEventListener('input', function() {
-            if (_searchDebounceTimer) clearTimeout(_searchDebounceTimer);
-            _searchDebounceTimer = setTimeout(function() {
-                _searchDebounceTimer = null;
-                amountFilterStr = document.getElementById('amountFilter').value.trim();
-                _triggerSearch();
-            }, 200);
-        });
         document.querySelectorAll('.type-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 typeFilter = this.getAttribute('data-type');
@@ -1666,14 +2238,6 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
                 _triggerSearch();
             });
         });
-        document.getElementById('dateFrom').addEventListener('change', function() {
-            dateRangeFilter.from = this.value;
-            _triggerSearch();
-        });
-        document.getElementById('dateTo').addEventListener('change', function() {
-            dateRangeFilter.to = this.value;
-            _triggerSearch();
-        });
         document.getElementById('filterResetBtn').addEventListener('click', function() {
             clearSearchMode();
         });
@@ -1682,9 +2246,56 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
             if (subPieChart) subPieChart.resize();
             if (accountChart) accountChart.resize();
         });
+
+        document.querySelectorAll('.seg-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.seg-tab').forEach(function(t) { t.classList.remove('active'); });
+                this.classList.add('active');
+                var target = this.getAttribute('data-tab');
+                document.getElementById('consumeTab').style.display = target === 'consume' ? '' : 'none';
+                document.getElementById('assetsTab').style.display = target === 'assets' ? '' : 'none';
+                if (target === 'assets') {
+                    if (accountChart) accountChart.resize();
+                } else {
+                    if (expensePieChart) expensePieChart.resize();
+                    if (subPieChart) subPieChart.resize();
+                }
+            });
+        });
+
+        document.querySelectorAll('.mobile-nav-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.mobile-nav-btn').forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                var view = this.getAttribute('data-view');
+                document.querySelector('.left-col').style.display = view === 'dashboard' ? '' : 'none';
+                document.querySelector('.right-col').style.display = view === 'transactions' ? '' : 'none';
+                if (view === 'dashboard') {
+                    if (expensePieChart) expensePieChart.resize();
+                    if (accountChart) accountChart.resize();
+                }
+            });
+        });
+
         initSelect();
         render();
+        renderHouseholdFundFlow();
         _renderFreshness();
+
+        var hhBtn = document.getElementById('householdBtn');
+        if (hhBtn) {
+            hhBtn.addEventListener('click', _hhOpenModal);
+        }
+        var hhClose = document.getElementById('hhModalClose');
+        if (hhClose) {
+            hhClose.addEventListener('click', _hhCloseModal);
+        }
+        var hhOverlay = document.getElementById('hhModalOverlay');
+        if (hhOverlay) {
+            hhOverlay.addEventListener('click', function(e) {
+                if (e.target === hhOverlay) _hhCloseModal();
+            });
+        }
         var section = document.getElementById('fullTxnSection');
         if (section) {
             section.addEventListener('wheel', handleWheel, { passive: false });
@@ -1716,6 +2327,36 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         }
         document.getElementById('loadingOverlay').classList.add('hidden');
     }
+
+    function _findTxnById(txnId) {
+        for (var mi in TXN_DETAILS) {
+            for (var di in TXN_DETAILS[mi]) {
+                var txns = TXN_DETAILS[mi][di];
+                for (var i = 0; i < txns.length; i++) {
+                    if (txns[i].id === txnId) return txns[i];
+                }
+            }
+        }
+        return null;
+    }
+
+    window._copyTxnRef = function(btn, txnId) {
+        var t = _findTxnById(txnId);
+        if (!t) return;
+        var dateShort = t.date ? t.date.slice(0, 10) : '';
+        var amountFmt = t.amount.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        var amountStr = (t.ttype === '收入' || t.ttype === '退款') ? '+' + amountFmt : amountFmt;
+        var refText = '[交易#' + txnId + '] ' + dateShort + ' | ' + t.ttype + ' | ' + amountStr + ' | ' + (t.counterparty || '-') + ' | ' + (t.source_type || '');
+        navigator.clipboard.writeText(refText).then(function() {
+            btn.textContent = '已复制';
+            btn.classList.add('copied');
+            showToast('交易凭证已成功复制到剪贴板');
+            setTimeout(function() {
+                btn.textContent = '复制';
+                btn.classList.remove('copied');
+            }, 1200);
+        });
+    };
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
