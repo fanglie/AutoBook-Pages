@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>泡泡君的自动账本</title>
-<meta name="secure-template-version" content='secure-template-version-7.1' />
+<meta name="secure-template-version" content='secure-template-version-8.4' />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='3' y='14' width='5' height='15' rx='1' fill='%23EA8379'/><rect x='10' y='8' width='5' height='21' rx='1' fill='%23299D8F'/><rect x='17' y='18' width='5' height='11' rx='1' fill='%23EA8379' opacity='.65'/><rect x='24' y='4' width='5' height='25' rx='1' fill='%23299D8F' opacity='.65'/><polyline points='4,12 12,6 20,16 28,2' fill='none' stroke='%232D3436' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>" type="image/svg+xml">
 <script src="./crypto-js.min.js"></script>
 <script src="./echarts.min.js"></script>
@@ -17,9 +17,13 @@
     --text-secondary: #475569;
     --text-muted: #94A3B8;
     --border-light: #E2E8F0;
-    --expense: #EF4444;
-    --income: #10B981;
-    --shadow-card: 0 4px 12px rgba(0,0,0,0.06);
+    --expense-deep: #BE123C; --expense-medium: #E11D48; --expense-light: #FFF1F2; --expense-weak: #FDA4AF;
+    --income-deep: #047857; --income-medium: #059669; --income-light: #ECFDF5; --income-weak: #6EE7B7;
+    --accent-deep: #334155; --accent-medium: #475569; --accent-light: #F1F5F9; --accent-weak: #CBD5E1;
+    --neutral-deep: #64748B; --neutral-medium: #94A3B8; --neutral-light: #F8FAFC; --neutral-weak: #E2E8F0;
+    --expense: var(--expense-deep);
+    --income: var(--income-deep);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
     --radius: 12px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -76,12 +80,12 @@ h1 {
 .loading-overlay.hidden { display: none; }
 .loading-spinner {
     width: 40px; height: 40px; border: 3px solid var(--border-light);
-    border-top-color: var(--income); border-radius: 50%;
+    border-top-color: #94A3B8; border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-text { font-size: 14px; color: var(--text-muted); }
-.loading-error { color: var(--expense); font-size: 14px; display: none; }
+.loading-error { color: #BE123C; font-size: 14px; display: none; }
 
 /* two-column layout */
 .two-col {
@@ -195,9 +199,9 @@ h1 {
     color: var(--text-muted); margin-right: 12px;
     flex-shrink: 0;
 }
-.rank-list .rank.r1 { background: var(--expense); color: #fff; }
-.rank-list .rank.r2 { background: #F0A58E; color: #fff; }
-.rank-list .rank.r3 { background: #7EB8DA; color: #fff; }
+.rank-list .rank.r1 { background: #FFF1F2; color: #BE123C; }
+.rank-list .rank.r2 { background: #F1F5F9; color: #475569; }
+.rank-list .rank.r3 { background: #F1F5F9; color: #475569; }
 .rank-list .amt { color: var(--expense); font-weight: 600; font-size: 14px; }
 .rank-list .pct { color: var(--text-muted); font-size: 12px; margin-left: 6px; }
 
@@ -238,7 +242,7 @@ h1 {
     cursor: pointer; box-shadow: var(--shadow-card); transition: all .2s;
     white-space: nowrap;
 }
-.household-btn:hover { background: var(--income); color: #fff; border-color: var(--income); }
+.household-btn:hover { background: #334155; color: #fff; border-color: #334155; }
 .hh-modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.45); z-index: 2000;
@@ -263,7 +267,7 @@ h1 {
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     transition: all .15s;
 }
-.hh-modal-close:hover { background: var(--expense); color: #fff; }
+.hh-modal-close:hover { background: #334155; color: #fff; }
 .hh-modal-year-tabs {
     display: flex; gap: 0; padding: 12px 24px 0; flex-shrink: 0;
     border-bottom: 2px solid var(--border-light);
@@ -274,7 +278,7 @@ h1 {
     margin-bottom: -2px; transition: all .15s;
 }
 .hh-year-tab:hover { color: var(--text-primary); }
-.hh-year-tab.active { color: var(--income); border-bottom-color: var(--income); font-weight: 600; }
+.hh-year-tab.active { color: #334155; border-bottom-color: #334155; font-weight: 600; }
 .hh-modal-month-grid {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
     padding: 16px 24px; flex-shrink: 0;
@@ -285,13 +289,13 @@ h1 {
     text-align: center;
 }
 .hh-month-card:hover { background: var(--bg-card); box-shadow: var(--shadow-card); }
-.hh-month-card.active { border-color: var(--income); background: #E8F5F2; }
+.hh-month-card.active { border-color: #475569; background: #F1F5F9; }
 .hh-month-card.hh-no-data { opacity: 0.5; cursor: default; }
 .hh-month-card.hh-no-data:hover { background: var(--bg-page); box-shadow: none; }
 .hh-mc-name { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
 .hh-income-tag { display: inline-block; border-radius: 10px; font-size: 11px; padding: 2px 8px; margin-bottom: 3px; font-weight: 500; }
-.hh-tag-ok { background: #D1FAE5; color: #065F46; }
-.hh-tag-err { background: #FEE2E2; color: #991B1B; }
+.hh-tag-ok { background: #ECFDF5; color: #047857; }
+.hh-tag-err { background: #FFF1F2; color: #BE123C; }
 .hh-modal-content {
     flex: 1; overflow-y: auto; padding: 20px 24px 24px;
     min-height: 0;
@@ -309,8 +313,8 @@ h1 {
     display: inline-flex; align-items: center; gap: 4px;
     font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 12px;
 }
-.hh-ind-ok { background: #E8F5F2; color: var(--income); }
-.hh-ind-pending { background: #FFF0EE; color: var(--expense); }
+.hh-ind-ok { background: #ECFDF5; color: #047857; }
+.hh-ind-pending { background: #FFF1F2; color: #BE123C; }
 .hh-ind-suspect { background: #FFF8E1; color: #F0A500; }
 .hh-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; margin-bottom: 20px; }
 .hh-table th { text-align: left; padding: 8px 10px; font-weight: 500; font-size: 12px; color: var(--text-muted); border-bottom: 2px solid var(--border-light); background: var(--bg-page); }
@@ -340,10 +344,10 @@ h1 {
     border: 2px solid transparent;
 }
 .cal-cell:hover { background: var(--bg-page); }
-.cal-cell.today { border-color: var(--income); }
+.cal-cell.today { border-color: #334155; }
 .cal-cell.selected { border-color: var(--expense); background: #FFF5F5; }
 .cal-day-num { font-size: 15px; font-weight: 600; color: var(--text-primary); }
-.cal-cell.today .cal-day-num { color: var(--income); }
+.cal-cell.today .cal-day-num { color: #334155; }
 .cal-expense { font-size: 12px; color: var(--expense); line-height: 1.2; }
 .cal-income { font-size: 12px; color: var(--income); line-height: 1.2; }
 
@@ -354,9 +358,9 @@ h1 {
     border-radius: 20px; font-size: 14px; outline: none; background: var(--bg-card);
     box-shadow: var(--shadow-card); color: var(--text-primary);
 }
-.search-box input:focus { border-color: var(--income); }
+.search-box input:focus { border-color: #475569; }
 .search-box input::placeholder { color: var(--text-muted); }
-.search-box input.filter-active { border-color: var(--expense); box-shadow: 0 0 0 2px rgba(234,131,121,0.2); }
+.search-box input.filter-active { border-color: #475569; box-shadow: 0 0 0 2px rgba(100,116,139,0.12); }
 
 /* filter row */
 .filter-row {
@@ -372,7 +376,7 @@ h1 {
 .type-btn:first-child { border-radius: 10px 0 0 10px; }
 .type-btn:last-child { border-radius: 0 10px 10px 0; }
 .type-btn:not(:first-child) { margin-left: -1px; }
-.type-btn.active { background: var(--income); color: #fff; border-color: var(--income); z-index: 1; }
+.type-btn.active { background: #334155; color: #fff; border-color: #334155; z-index: 1; }
 .filter-reset-btn {
     padding: 3px 10px; border: 1px solid var(--border-light); border-radius: 10px;
     font-size: 11px; cursor: pointer; color: var(--text-muted); background: var(--bg-card);
@@ -398,7 +402,7 @@ h1 {
     display: flex; align-items: center; gap: 8px;
     padding: 10px 0 6px; margin-top: 8px;
     border-bottom: 2px solid var(--border-light); cursor: pointer;
-    font-size: 15px; font-weight: 700; color: var(--income);
+    font-size: 15px; font-weight: 700; color: #334155;
     transition: color .15s;
 }
 .month-group-header:hover { color: var(--text-primary); }
@@ -457,9 +461,9 @@ h1 {
     transition: all .2s;
 }
 .seg-tab.active {
-    background: var(--income);
+    background: #334155;
     color: #fff;
-    box-shadow: 0 2px 6px rgba(16,185,129,0.3);
+    box-shadow: 0 2px 6px rgba(51,65,85,0.2);
 }
 .seg-tab:not(.active):hover {
     color: var(--text-secondary);
@@ -496,7 +500,7 @@ h1 {
     opacity: 0;
 }
 .toast-icon {
-    color: var(--income);
+    color: #334155;
     font-size: 18px;
     font-weight: 700;
 }
@@ -531,19 +535,18 @@ h1 {
     transition: color .2s;
 }
 .mobile-nav-btn.active {
-    color: var(--income);
+    color: #334155;
 }
 .mobile-nav-btn svg {
     stroke: currentColor;
 }
 
-/* txn row — minimalist three-column layout */
+/* txn row — dual-line layout with tags */
 .txn-row {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 12px 4px;
-    gap: 12px;
+    flex-direction: column;
+    padding: 8px 4px;
+    gap: 2px;
     border-bottom: 1px solid #F8FAFC;
     position: relative;
     transition: background 0.15s ease;
@@ -551,69 +554,82 @@ h1 {
 .txn-row:last-child { border-bottom: none; }
 .txn-row:hover { background: rgba(248,250,252,0.8); }
 .txn-row:hover .copy-btn { opacity: 1; }
-.txn-left {
+.txn-row-line1 {
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+    justify-content: space-between;
+    gap: 6px;
     min-width: 0;
-    position: relative;
 }
-.txn-cat-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #F1F5F9;
-    color: #475569;
+.txn-row-line2 {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    flex-shrink: 0;
-    overflow: hidden;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #94A3B8;
+    min-width: 0;
+    padding-right: 40px;
 }
-.txn-cat-name {
+.txn-title {
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 500;
     color: #334155;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100px;
+    max-width: 120px;
+    flex-shrink: 0;
 }
-.txn-dot-verified {
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: #60A5FA;
-    position: absolute;
-    top: -1px;
-    left: 24px;
-}
-.txn-meta {
-    flex: 1;
-    font-size: 12px;
-    color: #94A3B8;
+.txn-tags {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 1;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     min-width: 0;
 }
-.txn-meta-sep {
-    margin: 0 4px;
-    color: #CBD5E1;
+.txn-tag {
+    font-size: 11px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+    display: inline-block;
+    line-height: 1.4;
+}
+.txn-tag-source-alipay { background: #E6F4FF; color: #1677FF; }
+.txn-tag-source-wechat { background: #E8F8EE; color: #07C160; }
+.txn-tag-source-qianji { background: #F5F5F5; color: #8C8C8C; }
+.txn-tag-source-pinduoduo { background: #FFF1E8; color: #E44D2A; }
+.txn-tag-source-cmb { background: #E8F8EE; color: #52C41A; }
+.txn-tag-source-jd { background: #FFF0F0; color: #e4393c; }
+.txn-tag-account { background: #fff; border-left: 2.5px solid var(--account-brand-color, #CBD5E1); color: var(--account-brand-color, #475569); min-width: 64px; flex-shrink: 0; }
+.txn-account-slot { min-width: 64px; flex-shrink: 0; }
+.txn-tag-verified { background: #D1FAE5; color: #065F46; }
+.txn-tag-fund { background: #EDE9FE; color: #6D28D9; }
+.txn-tag-reimburse { background: #FFF7ED; color: #C2410C; }
+.txn-transfer-arrow {
+    color: #94A3B8;
+    font-size: 12px;
+    margin: 0 2px;
+}
+.txn-amount-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
 }
 .txn-amount-lg {
     font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    font-size: 18px;
+    font-size: 16px;
     white-space: nowrap;
     flex-shrink: 0;
 }
-.amt-expense { color: #EF4444; }
-.amt-income { color: #10B981; }
-.amt-refund { color: #94A3B8; }
+.amt-expense { color: #BE123C; }
+.amt-income { color: #047857; }
+.amt-refund { color: #64748B; }
 .amt-transfer { color: #818CF8; }
 .copy-btn {
     opacity: 0;
@@ -627,13 +643,16 @@ h1 {
     transition: opacity 0.15s, color .15s, border-color .15s;
     white-space: nowrap;
     flex-shrink: 0;
+    position: absolute;
+    right: 4px;
+    bottom: 6px;
 }
 .copy-btn:hover { background: var(--bg-page); color: var(--text-primary); }
 .copy-btn.copied { color: var(--income); border-color: var(--income); }
 
 /* mark highlight */
 mark {
-    background: rgba(234,131,121,0.25); color: inherit; padding: 0 2px;
+    background: rgba(100,116,139,0.15); color: inherit; padding: 0 2px;
     border-radius: 2px; font-weight: 500;
 }
 
@@ -675,7 +694,7 @@ mark {
 .filter-tag {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 4px 10px; border-radius: 16px; font-size: 12px;
-    background: #E8F5F2; color: var(--income); font-weight: 500;
+    background: #F1F5F9; color: #334155; font-weight: 500;
     white-space: nowrap;
 }
 .filter-tag .filter-tag-close {
@@ -779,7 +798,7 @@ mark {
     <div class="loading-error" id="loadingError"></div>
 </div>
 <div class="container">
-    <h1><span class="title-row"><svg width="28" height="28" viewBox="0 0 32 32" style="vertical-align:middle;margin-right:8px"><rect x="3" y="14" width="5" height="15" rx="1" fill="#EA8379"/><rect x="10" y="8" width="5" height="21" rx="1" fill="#299D8F"/><rect x="17" y="18" width="5" height="11" rx="1" fill="#EA8379" opacity=".65"/><rect x="24" y="4" width="5" height="25" rx="1" fill="#299D8F" opacity=".65"/><polyline points="4,12 12,6 20,16 28,2" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>泡泡君的自动账本<span class="version-badge">v7.1</span></span>
+    <h1><span class="title-row"><svg width="28" height="28" viewBox="0 0 32 32" style="vertical-align:middle;margin-right:8px"><rect x="3" y="14" width="5" height="15" rx="1" fill="#EA8379"/><rect x="10" y="8" width="5" height="21" rx="1" fill="#299D8F"/><rect x="17" y="18" width="5" height="11" rx="1" fill="#EA8379" opacity=".65"/><rect x="24" y="4" width="5" height="25" rx="1" fill="#299D8F" opacity=".65"/><polyline points="4,12 12,6 20,16 28,2" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>泡泡君的自动账本<span class="version-badge">v8.4</span></span>
     <div class="data-freshness-badge" id="freshnessBadge" style="display:none;">
         <span id="freshnessText"></span>
         <div class="freshness-tooltip" id="freshnessTooltip"></div>
@@ -975,10 +994,10 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
 })();
 
 (function() {
-    var C_EXPENSE = '#EF4444';
-    var C_INCOME = '#10B981';
+    var C_EXPENSE = '#BE123C';
+    var C_INCOME = '#047857';
 
-    var PALETTE = ['#3B82F6','#8B5CF6','#EC4899','#F59E0B','#10B981','#06B6D4','#F97316','#6366F1','#14B8A6','#E11D48','#84CC16','#A855F7','#0EA5E9','#D946EF','#22D3EE','#FB923C','#34D399','#818CF8','#FB7185','#FBBF24'];
+    var PALETTE = ['#64748B','#7C8CC4','#E08B8B','#6BAF92','#D4A054','#8B9DC3','#B07DAD','#6BA3B7','#C4826B','#8AAE79'];
 
     var selectedDate = null;
     var currentMonth = null;
@@ -1035,70 +1054,117 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         return text.substring(0, idx) + '<mark>' + text.substring(idx, idx + kw.length) + '</mark>' + text.substring(idx + kw.length);
     }
 
-    function _getCatIcon(category) {
-        if (!category) return '·';
-        var emojiMap = {
-            '餐饮': '🍜', '外卖': '🛵', '早餐': '🥐', '午餐': '🍱', '晚餐': '🍽',
-            '交通': '🚌', '打车': '🚕', '地铁': '🚇', '公交': '🚌', '加油': '⛽',
-            '购物': '🛒', '日用': '🏠', '服饰': '👔', '数码': '📱', '家电': '📺',
-            '住房': '🏡', '租金': '🔑', '水电': '💧', '物业': '🏢',
-            '医疗': '🏥', '药品': '💊', '运动': '🏃', '健身': '💪',
-            '娱乐': '🎮', '电影': '🎬', '游戏': '🎯', '音乐': '🎵',
-            '教育': '📚', '书籍': '📖', '课程': '🎓',
-            '社交': '💬', '礼物': '🎁', '红包': '🧧',
-            '旅行': '✈️', '酒店': '🏨', '机票': '🎫',
-            '工资': '💰', '理财': '📈', '转账': '↔️', '报销': '📋',
-            '水果': '🍎', '零食': '🍪', '饮品': '🧋', '咖啡': '☕',
-            '宠物': '🐾', '美容': '💇', '理发': '✂️',
-            '快递': '📦', '话费': '📞', '保险': '🛡',
+    function _buildSourceTags(t) {
+        var allSources = t.all_sources || [t.source_type];
+        var displaySources = [];
+        var hasCc = false;
+        for (var i = 0; i < allSources.length; i++) {
+            var s = allSources[i];
+            if (s === 'cmb_credit') { hasCc = true; continue; }
+            displaySources.push(s);
+        }
+        var MAX_SHOW = 2;
+        var shown = displaySources.slice(0, MAX_SHOW);
+        var overflow = displaySources.length - MAX_SHOW;
+        var sourceCssMap = {
+            'alipay': 'txn-tag-source-alipay',
+            'wechat': 'txn-tag-source-wechat',
+            'qianji': 'txn-tag-source-qianji',
+            'pinduoduo': 'txn-tag-source-pinduoduo',
+            'cmb_debit': 'txn-tag-source-cmb',
+            'jd': 'txn-tag-source-jd'
         };
-        if (emojiMap[category]) return emojiMap[category];
-        return category.charAt(0);
+        var html = '';
+        for (var si = 0; si < shown.length; si++) {
+            var css = sourceCssMap[shown[si]] || 'txn-tag-source-qianji';
+            var label = SOURCE_LABELS[shown[si]] || shown[si];
+            html += '<span class="txn-tag ' + css + '" title="' + label + '">' + label + '</span>';
+        }
+        if (overflow > 0) {
+            html += '<span class="txn-tag txn-tag-source-qianji">+' + overflow + '</span>';
+        }
+        var isMultiSource = allSources.length > 1;
+        if (isMultiSource || hasCc) {
+            html += '<span class="txn-tag txn-tag-verified" title="多源交叉验证">✓</span>';
+        }
+        return html;
     }
 
-    function _buildSourceText(t) {
-        var allSources = t.all_sources || [t.source_type];
-        var parts = [];
-        for (var si = 0; si < allSources.length; si++) {
-            parts.push(SOURCE_LABELS[allSources[si]] || allSources[si]);
+    function _buildAccountTag(account) {
+        if (!account) return '';
+        var shortName = ACCOUNT_SHORT_NAMES[account] || account;
+        var tooltip = account;
+        var brandColor = ACCOUNT_BRAND_COLORS[account] || '';
+        var style = '';
+        if (brandColor) {
+            style = ' style="border-left-color:' + brandColor + ';color:' + brandColor + '"';
         }
-        return parts.join(' | ');
+        return '<span class="txn-tag txn-tag-account"' + style + ' title="' + tooltip + '">' + shortName + '</span>';
     }
 
     function _buildTxnRowHtml(t, keyword) {
-        var amtClass = t.ttype === '转账' ? 'amt-transfer' : t.ttype === '收入' ? 'amt-income' : t.ttype === '退款' ? 'amt-refund' : 'amt-expense';
-        var timeStr = t.date.length >= 16 ? t.date.slice(11, 16) : '';
-        var isTransferPair = t.ttype === '转账' && t.account.indexOf('→') >= 0;
+        var isTransfer = t.ttype === '转账';
+        var hasArrow = isTransfer && t.transfer_from && t.transfer_to;
+        var isFund = isTransfer && !hasArrow && t.flow_label === '归集';
+        var isReimburse = isTransfer && !hasArrow && t.flow_label === '报销';
 
-        var catRaw = isTransferPair ? '转账' : (t.category1 || t.category2 || t.counterparty || '');
-        var catIcon = _getCatIcon(isTransferPair ? '转账' : (t.category1 || t.category2 || ''));
-        var catName = _highlightKeyword(catRaw || '-', keyword);
-        var cpDisplay = isTransferPair ? _highlightKeyword(t.account, keyword) : _highlightKeyword(t.counterparty || '', keyword);
-        var isMultiSource = t.all_sources && t.all_sources.length > 1;
-        var sourceText = _buildSourceText(t);
-        var flowLabel = t.flow_label || '';
+        var amtClass;
+        if (isTransfer) {
+            amtClass = isReimburse ? 'amt-income' : 'amt-transfer';
+        } else {
+            amtClass = t.ttype === '收入' ? 'amt-income' : t.ttype === '退款' ? 'amt-refund' : 'amt-expense';
+        }
+        var timeStr = t.date.length >= 16 ? t.date.slice(11, 16) : '';
+
+        var title = '';
+        if (hasArrow) {
+            var fromShort = ACCOUNT_SHORT_NAMES[t.transfer_from] || t.transfer_from;
+            var toShort = ACCOUNT_SHORT_NAMES[t.transfer_to] || t.transfer_to;
+            title = _highlightKeyword(fromShort, keyword) + ' <span class="txn-transfer-arrow">→</span> ' + _highlightKeyword(toShort, keyword);
+        } else if (isFund) {
+            title = _highlightKeyword(t.category1 || '归集', keyword);
+        } else if (isReimburse) {
+            title = _highlightKeyword('家庭报销', keyword);
+        } else if (t.category2) {
+            title = _highlightKeyword(t.category2, keyword);
+        } else if (t.category1 && t.category1 !== '未分类') {
+            title = _highlightKeyword(t.category1, keyword);
+        } else {
+            title = _highlightKeyword('未分类', keyword);
+        }
+
+        var tagsHtml = _buildSourceTags(t);
+        if (isFund) {
+            tagsHtml += '<span class="txn-tag txn-tag-fund">归集</span>';
+        } else if (isReimburse) {
+            tagsHtml += '<span class="txn-tag txn-tag-reimburse">报销</span>';
+        }
+
+        var accountHtml = _buildAccountTag(t.account);
+        var accountSlot = accountHtml || '<span class="txn-account-slot"></span>';
+
+        var line2Parts = [];
+        if (timeStr) line2Parts.push(timeStr);
+        if (hasArrow) {
+            if (t.category1 && t.category1 !== '未分类') line2Parts.push(t.category1);
+        } else if (!isFund && !isReimburse) {
+            var cp = t.counterparty || '';
+            if (cp) line2Parts.push(_highlightKeyword(cp, keyword));
+        } else {
+            var cp2 = t.counterparty || '';
+            if (cp2) line2Parts.push(_highlightKeyword(cp2, keyword));
+        }
+        var line2Text = line2Parts.join(' · ');
 
         var html = '<div class="txn-row">';
-        html += '<div class="txn-left">';
-        if (isMultiSource) html += '<span class="txn-dot-verified"></span>';
-        html += '<span class="txn-cat-icon">' + catIcon + '</span>';
-        html += '<span class="txn-cat-name">' + catName + '</span>';
+        html += '<div class="txn-row-line1">';
+        html += '<span class="txn-title" title="' + (t.category2 || t.category1 || '') + '">' + title + '</span>';
+        html += '<span class="txn-tags">' + tagsHtml + '</span>';
+        html += '<span class="txn-amount-wrap"><span class="txn-amount-lg ' + amtClass + '">' + formatAmount(t.amount, t.ttype) + '</span>' + accountSlot + '</span>';
         html += '</div>';
-
-        var metaParts = [];
-        if (timeStr) metaParts.push(timeStr);
-        metaParts.push(sourceText);
-        if (cpDisplay) metaParts.push(cpDisplay);
-        if (flowLabel) metaParts.push(flowLabel);
-        var metaHtml = '';
-        for (var mi = 0; mi < metaParts.length; mi++) {
-            if (mi > 0) metaHtml += '<span class="txn-meta-sep">|</span>';
-            metaHtml += metaParts[mi];
-        }
-        html += '<span class="txn-meta">' + metaHtml + '</span>';
-
-        html += '<span class="txn-amount-lg ' + amtClass + '">' + formatAmount(t.amount, t.ttype) + '</span>';
+        html += '<div class="txn-row-line2">' + line2Text;
         html += '<button class="copy-btn" onclick="window._copyTxnRef(this,' + t.id + ')" title="复制交易引用">复制</button>';
+        html += '</div>';
         html += '</div>';
         return html;
     }
@@ -1270,6 +1336,8 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
     var CALENDAR_DATA = {};
     var SOURCE_LABELS = {};
     var SOURCE_COLORS = {};
+    var ACCOUNT_SHORT_NAMES = {};
+    var ACCOUNT_BRAND_COLORS = {};
     var HOUSEHOLD_DATA = {};
     var detailsReady = false;
 
@@ -1281,6 +1349,8 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         CALENDAR_DATA = d.calendar_data || {};
         SOURCE_LABELS = d.source_labels || {};
         SOURCE_COLORS = d.source_colors || {};
+        ACCOUNT_SHORT_NAMES = d.account_short_names || {};
+        ACCOUNT_BRAND_COLORS = d.account_brand_colors || {};
         HOUSEHOLD_DATA = d.householdFundFlow || {};
     }
     var det = window.__REPORT_DETAILS;
@@ -1434,7 +1504,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
                 style: { text: '总支出', fill: '#94A3B8', fontSize: 12 }
             }, {
                 type: 'text', left: 'center', top: '51%',
-                style: { text: fmt(total), fill: C_EXPENSE, fontSize: 22, fontWeight: 'bold' }
+                style: { text: fmt(total), fill: '#BE123C', fontSize: 22, fontWeight: 'bold' }
             }]
         });
 
