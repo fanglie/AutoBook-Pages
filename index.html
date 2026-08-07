@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>泡泡君的自动账本</title>
-<meta name="secure-template-version" content='secure-template-version-8.4' />
+<meta name="secure-template-version" content='secure-template-version-9.2' />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='3' y='14' width='5' height='15' rx='1' fill='%23EA8379'/><rect x='10' y='8' width='5' height='21' rx='1' fill='%23299D8F'/><rect x='17' y='18' width='5' height='11' rx='1' fill='%23EA8379' opacity='.65'/><rect x='24' y='4' width='5' height='25' rx='1' fill='%23299D8F' opacity='.65'/><polyline points='4,12 12,6 20,16 28,2' fill='none' stroke='%232D3436' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>" type="image/svg+xml">
 <script src="./crypto-js.min.js"></script>
 <script src="./echarts.min.js"></script>
@@ -45,30 +45,43 @@ h1 {
     font-size: 12px; font-weight: 400; color: var(--text-muted);
     margin-left: 8px; vertical-align: middle; white-space: nowrap;
 }
-.data-freshness-badge {
-    position: relative; display: inline-block;
+.health-dashboard {
+    position: relative; display: block;
+    margin-top: 4px; user-select: none;
+}
+.health-summary {
+    display: inline-flex; align-items: center; gap: 8px;
     font-size: 13px; color: var(--text-secondary); font-weight: 400;
-    cursor: default; margin-top: 4px; user-select: none;
+    cursor: pointer; padding: 4px 10px; border-radius: 6px;
+    transition: background .15s;
 }
-.data-freshness-badge:hover .freshness-tooltip,
-.data-freshness-badge:focus-within .freshness-tooltip {
-    display: block;
+.health-summary:hover { background: var(--bg-page); }
+.health-toggle-icon {
+    font-size: 10px; color: var(--text-muted);
+    transition: transform .2s;
 }
-.freshness-tooltip {
-    display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-    background: var(--bg-card); border: 1px solid var(--border-light);
-    border-radius: var(--radius); padding: 12px 16px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 100;
-    min-width: 320px; margin-top: 8px; font-size: 12px;
+.health-toggle-icon.expanded { transform: rotate(180deg); }
+.health-detail {
+    margin-top: 8px; background: var(--bg-card);
+    border: 1px solid var(--border-light); border-radius: var(--radius);
+    padding: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    max-width: 640px;
 }
-.freshness-tooltip table { width: 100%; border-collapse: collapse; }
-.freshness-tooltip th {
-    text-align: left; padding: 4px 8px; font-weight: 500;
+.health-stale-count { color: #D97706; font-weight: 600; }
+.health-suspicion-count { color: #92400E; font-weight: 600; }
+.health-mobile-table { display: none; }
+.health-mobile-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.health-mobile-table th {
+    text-align: left; padding: 6px 8px; font-weight: 500; font-size: 12px;
     color: var(--text-muted); border-bottom: 1px solid var(--border-light);
+    background: var(--bg-page);
 }
-.freshness-tooltip td {
-    padding: 4px 8px; color: var(--text-secondary);
-}
+.health-mobile-table th:not(:first-child) { text-align: center; }
+.health-mobile-table td { padding: 6px 8px; color: var(--text-secondary); border-bottom: 1px solid var(--border-light); }
+.health-mobile-table td:not(:first-child) { text-align: center; }
+.health-status-ok { color: #059669; }
+.health-status-stale { color: #D97706; font-weight: 500; }
+.health-status-nodata { color: var(--text-muted); }
 
 /* loading */
 .loading-overlay {
@@ -506,6 +519,27 @@ h1 {
 }
 
 /* mobile bottom nav */
+.ai-card-header { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.ai-icon { font-size: 20px; }
+.ai-summary { font-size: 14px; line-height: 1.8; color: var(--text-secondary); }
+.ai-summary p { margin: 4px 0; }
+.ai-cat-block { padding: 8px 0; border-bottom: 1px solid var(--border-light); }
+.ai-cat-block:last-child { border-bottom: none; }
+.ai-cat-header { font-weight: 600; color: var(--text-primary); margin-bottom: 2px; font-size: 14px; }
+.ai-cat-body { color: var(--text-secondary); font-size: 13px; line-height: 1.7; }
+.ai-badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 4px; }
+.ai-badge-up { background: #FFF1F2; color: #BE123C; }
+.ai-badge-down { background: #ECFDF5; color: #047857; }
+.ai-badge-new { background: #EFF6FF; color: #3B82F6; }
+.ai-detail-toggle { text-align: center; margin: 10px 0 0; }
+.ai-toggle-btn { background: none; border: 1px solid var(--border-light); border-radius: 8px; padding: 6px 16px; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: all .15s; }
+.ai-toggle-btn:hover { background: var(--bg-page); color: var(--text-primary); }
+.ai-detail-body { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-light); font-size: 14px; line-height: 1.8; color: var(--text-secondary); }
+.ai-detail-body p { margin: 4px 0; }
+.ai-stale-warn { background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 13px; color: #92400E; }
+.ai-gen-time { font-size: 11px; color: var(--text-muted); margin-top: 8px; text-align: right; }
+.ai-empty-hint { text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px; }
+
 .mobile-bottom-nav {
     display: none;
     position: fixed;
@@ -602,9 +636,13 @@ h1 {
 .txn-tag-source-pinduoduo { background: #FFF1E8; color: #E44D2A; }
 .txn-tag-source-cmb { background: #E8F8EE; color: #52C41A; }
 .txn-tag-source-jd { background: #FFF0F0; color: #e4393c; }
+.txn-tag-source-boc { background: #FFF7ED; color: #fa541c; }
+.txn-tag-suspicion { background: #FEF3C7; color: #92400E; }
+.txn-tag-suspicion-unknown { background: #FEF3C7; color: #92400E; }
+.txn-tag-exclude { background: #F1F5F9; color: #94A3B8; }
+.txn-tag-merged { background: #EFF6FF; color: #3B82F6; font-size: 12px; }
 .txn-tag-account { background: #fff; border-left: 2.5px solid var(--account-brand-color, #CBD5E1); color: var(--account-brand-color, #475569); min-width: 64px; flex-shrink: 0; }
 .txn-account-slot { min-width: 64px; flex-shrink: 0; }
-.txn-tag-verified { background: #D1FAE5; color: #065F46; }
 .txn-tag-fund { background: #EDE9FE; color: #6D28D9; }
 .txn-tag-reimburse { background: #FFF7ED; color: #C2410C; }
 .txn-transfer-arrow {
@@ -728,6 +766,10 @@ mark {
     .mobile-bottom-nav { display: flex; }
     body { padding-bottom: 64px; }
 }
+@media (max-width: 767px) {
+    .health-gantt-wrap { display: none; }
+    .health-mobile-table { display: block; }
+}
 
 /* lock modal */
 .lock-overlay {
@@ -798,10 +840,18 @@ mark {
     <div class="loading-error" id="loadingError"></div>
 </div>
 <div class="container">
-    <h1><span class="title-row"><svg width="28" height="28" viewBox="0 0 32 32" style="vertical-align:middle;margin-right:8px"><rect x="3" y="14" width="5" height="15" rx="1" fill="#EA8379"/><rect x="10" y="8" width="5" height="21" rx="1" fill="#299D8F"/><rect x="17" y="18" width="5" height="11" rx="1" fill="#EA8379" opacity=".65"/><rect x="24" y="4" width="5" height="25" rx="1" fill="#299D8F" opacity=".65"/><polyline points="4,12 12,6 20,16 28,2" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>泡泡君的自动账本<span class="version-badge">v8.4</span></span>
-    <div class="data-freshness-badge" id="freshnessBadge" style="display:none;">
-        <span id="freshnessText"></span>
-        <div class="freshness-tooltip" id="freshnessTooltip"></div>
+    <h1><span class="title-row"><svg width="28" height="28" viewBox="0 0 32 32" style="vertical-align:middle;margin-right:8px"><rect x="3" y="14" width="5" height="15" rx="1" fill="#EA8379"/><rect x="10" y="8" width="5" height="21" rx="1" fill="#299D8F"/><rect x="17" y="18" width="5" height="11" rx="1" fill="#EA8379" opacity=".65"/><rect x="24" y="4" width="5" height="25" rx="1" fill="#299D8F" opacity=".65"/><polyline points="4,12 12,6 20,16 28,2" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>泡泡君的自动账本<span class="version-badge">v9.2</span></span>
+    <div class="health-dashboard" id="healthDashboard" style="display:none;">
+        <div class="health-summary" id="healthSummary" onclick="window._toggleHealthPanel()">
+            <span id="healthSummaryText"></span>
+            <span class="health-toggle-icon" id="healthToggleIcon">▼</span>
+        </div>
+        <div class="health-detail" id="healthDetail" style="display:none;">
+            <div class="health-gantt-wrap" id="healthGanttWrap">
+                <div id="healthGanttChart" style="width:100%;height:280px;"></div>
+            </div>
+            <div class="health-mobile-table" id="healthMobileTable" style="display:none;"></div>
+        </div>
     </div></h1>
 
     <div class="month-nav">
@@ -902,6 +952,18 @@ mark {
                     <div class="hh-modal-year-tabs" id="hhYearTabs"></div>
                     <div class="hh-modal-month-grid" id="hhMonthGrid"></div>
                     <div class="hh-modal-content" id="hhModalContent"></div>
+                </div>
+            </div>
+
+            <div class="section" id="aiAnalysisSection" style="display:none;">
+                <div class="ai-card" id="aiCard">
+                    <div class="ai-card-header"><span class="ai-icon">🤖</span>AI 月度分析</div>
+                    <div class="ai-summary" id="aiSummary"></div>
+                    <div class="ai-detail-toggle" id="aiDetailToggle" style="display:none;">
+                        <button class="ai-toggle-btn" id="aiToggleBtn" onclick="window._toggleAiDetail()">展开详细分析</button>
+                    </div>
+                    <div class="ai-detail-body" id="aiDetailBody" style="display:none;"></div>
+                    <div class="ai-gen-time" id="aiGenTime"></div>
                 </div>
             </div>
 
@@ -1057,11 +1119,9 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
     function _buildSourceTags(t) {
         var allSources = t.all_sources || [t.source_type];
         var displaySources = [];
-        var hasCc = false;
         for (var i = 0; i < allSources.length; i++) {
-            var s = allSources[i];
-            if (s === 'cmb_credit') { hasCc = true; continue; }
-            displaySources.push(s);
+            if (allSources[i] === 'cmb_credit') continue;
+            displaySources.push(allSources[i]);
         }
         var MAX_SHOW = 2;
         var shown = displaySources.slice(0, MAX_SHOW);
@@ -1072,7 +1132,9 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
             'qianji': 'txn-tag-source-qianji',
             'pinduoduo': 'txn-tag-source-pinduoduo',
             'cmb_debit': 'txn-tag-source-cmb',
-            'jd': 'txn-tag-source-jd'
+            'cmb_credit_email': 'txn-tag-source-cmb',
+            'jd': 'txn-tag-source-jd',
+            'boc_debit': 'txn-tag-source-boc'
         };
         var html = '';
         for (var si = 0; si < shown.length; si++) {
@@ -1083,9 +1145,15 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         if (overflow > 0) {
             html += '<span class="txn-tag txn-tag-source-qianji">+' + overflow + '</span>';
         }
-        var isMultiSource = allSources.length > 1;
-        if (isMultiSource || hasCc) {
-            html += '<span class="txn-tag txn-tag-verified" title="多源交叉验证">✓</span>';
+        if (t.suspicion) {
+            if (t.suspicion === 'unknown_account') {
+                html += '<span class="txn-tag txn-tag-suspicion-unknown" title="账户未知：无法确定扣款/收款账户">未知</span>';
+            } else {
+                html += '<span class="txn-tag txn-tag-suspicion" title="钱迹独有，无平台佐证">⚠</span>';
+            }
+        }
+        if (t.exclude_from_stats) {
+            html += '<span class="txn-tag txn-tag-exclude">不计</span>';
         }
         return html;
     }
@@ -1134,6 +1202,10 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         }
 
         var tagsHtml = _buildSourceTags(t);
+        if (t.merged_role) {
+            var tip = t.merged_tip || '合并付款';
+            tagsHtml += '<span class="txn-tag txn-tag-merged" title="' + tip + '">🔗</span>';
+        }
         if (isFund) {
             tagsHtml += '<span class="txn-tag txn-tag-fund">归集</span>';
         } else if (isReimburse) {
@@ -1214,6 +1286,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
 
         var totalExp = 0, totalInc = 0;
         for (var i = 0; i < allTxns.length; i++) {
+            if (allTxns[i].exclude_from_stats) continue;
             if (allTxns[i].ttype === '支出') totalExp += allTxns[i].amount;
             else if (allTxns[i].ttype === '收入') totalInc += allTxns[i].amount;
         }
@@ -1339,6 +1412,9 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
     var ACCOUNT_SHORT_NAMES = {};
     var ACCOUNT_BRAND_COLORS = {};
     var HOUSEHOLD_DATA = {};
+    var SUSPICION_COUNTS = {};
+    var AI_ANALYSIS = {};
+    var _aiDetailExpanded = false;
     var detailsReady = false;
 
     var d = window.__REPORT_DATA;
@@ -1352,6 +1428,8 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         ACCOUNT_SHORT_NAMES = d.account_short_names || {};
         ACCOUNT_BRAND_COLORS = d.account_brand_colors || {};
         HOUSEHOLD_DATA = d.householdFundFlow || {};
+        SUSPICION_COUNTS = d.suspicion_counts || {};
+        AI_ANALYSIS = d.ai_analysis || {};
     }
     var det = window.__REPORT_DETAILS;
     if (det) {
@@ -1651,6 +1729,46 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         var hasData = Object.keys(HOUSEHOLD_DATA).length > 0;
         btn.style.display = hasData ? '' : 'none';
     }
+
+    function renderAiAnalysis() {
+        var section = document.getElementById('aiAnalysisSection');
+        if (!section) return;
+        var ai = AI_ANALYSIS[currentMonth];
+        _aiDetailExpanded = false;
+        if (!ai || (!ai.summary && !ai.detailed_html)) {
+            section.style.display = '';
+            var card = document.getElementById('aiCard');
+            card.innerHTML = '<div class="ai-card-header"><span class="ai-icon">🤖</span>AI 月度分析</div>' +
+                '<div class="ai-empty-hint">暂无分析 · 在 OpenCode 中运行 ai-monthly-analysis ' + currentMonth + '</div>';
+            return;
+        }
+        section.style.display = '';
+        var html = '<div class="ai-card-header"><span class="ai-icon">🤖</span>AI 月度分析</div>';
+        if (ai.is_stale) {
+            html += '<div class="ai-stale-warn">⚠️ 数据已更新，建议重新生成分析</div>';
+        }
+        if (ai.summary) {
+            html += '<div class="ai-summary">' + ai.summary.replace(/
+/g, '<br>') + '</div>';
+        }
+        if (ai.detailed_html) {
+            html += '<div class="ai-detail-toggle"><button class="ai-toggle-btn" onclick="window._toggleAiDetail()">展开详细分析</button></div>';
+            html += '<div class="ai-detail-body" id="aiDetailBody" style="display:none;">' + ai.detailed_html + '</div>';
+        }
+        if (ai.generated_at) {
+            html += '<div class="ai-gen-time">生成于 ' + ai.generated_at + '</div>';
+        }
+        document.getElementById('aiCard').innerHTML = html;
+    }
+
+    window._toggleAiDetail = function() {
+        var body = document.getElementById('aiDetailBody');
+        var btn = document.querySelector('.ai-toggle-btn');
+        if (!body) return;
+        _aiDetailExpanded = !_aiDetailExpanded;
+        body.style.display = _aiDetailExpanded ? '' : 'none';
+        if (btn) btn.textContent = _aiDetailExpanded ? '收起详细分析' : '展开详细分析';
+    };
 
     var _hhModal = {
         selectedYear: null,
@@ -2060,6 +2178,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
 
             var dayExp = 0, dayInc = 0;
             txns.forEach(function(t) {
+                if (t.exclude_from_stats) return;
                 if (t.ttype === '支出') dayExp += t.amount;
                 else if (t.ttype === '收入') dayInc += t.amount;
             });
@@ -2229,29 +2348,212 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
         renderExpensePie(md);
         renderAccount(md);
         renderBalance();
+        renderAiAnalysis();
     }
+
+    var _healthGanttChart = null;
+    var _healthExpanded = false;
+    var _healthGanttData = null;
+    var _healthGanttReady = false;
+
+    window._toggleHealthPanel = function() {
+        _healthExpanded = !_healthExpanded;
+        var detail = document.getElementById('healthDetail');
+        var icon = document.getElementById('healthToggleIcon');
+        if (detail) detail.style.display = _healthExpanded ? '' : 'none';
+        if (icon) icon.classList.toggle('expanded', _healthExpanded);
+        if (_healthExpanded) {
+            _ensureHealthGantt();
+            if (_healthGanttChart) {
+                setTimeout(function() { _healthGanttChart.resize(); }, 50);
+            }
+        }
+    };
 
     function _renderFreshness() {
         var d = window.__REPORT_DATA;
         if (!d || !d.freshness || !d.freshness.overall_max) {
-            var badge = document.getElementById('freshnessBadge');
-            if (badge) badge.style.display = 'none';
+            var dash = document.getElementById('healthDashboard');
+            if (dash) dash.style.display = 'none';
             return;
         }
         var f = d.freshness;
-        var badge = document.getElementById('freshnessBadge');
-        var text = document.getElementById('freshnessText');
-        var tooltip = document.getElementById('freshnessTooltip');
-        if (!badge || !text || !tooltip) return;
-        text.textContent = '数据更新至 ' + f.overall_max;
-        badge.style.display = '';
-        var html = '<table><thead><tr><th>渠道</th><th>起始日期</th><th>截止日期</th></tr></thead><tbody>';
+        var dash = document.getElementById('healthDashboard');
+        var summaryText = document.getElementById('healthSummaryText');
+        if (!dash || !summaryText) return;
+        dash.style.display = '';
+
+        var staleCount = 0;
+        for (var i = 0; i < f.sources.length; i++) {
+            if (f.sources[i].status === 'stale') staleCount++;
+        }
+
+        var html = '数据更新至 ' + f.overall_max;
+        if (staleCount > 0) {
+            html += ' · <span class="health-stale-count">' + staleCount + ' 个源需更新</span>';
+        }
+        var sc = SUSPICION_COUNTS[currentMonth];
+        if (sc) {
+            html += ' · <span class="health-suspicion-count">存疑: ' + sc + ' 笔</span>';
+        }
+        summaryText.innerHTML = html;
+
+        _renderHealthGantt(f);
+        _renderHealthMobileTable(f);
+        _healthGanttReady = false;
+    }
+
+    function _renderHealthGantt(f) {
+        _healthGanttData = f;
+        _healthGanttReady = false;
+    }
+
+    function _ensureHealthGantt() {
+        if (_healthGanttReady || !_healthGanttData) return;
+        _healthGanttReady = true;
+        var f = _healthGanttData;
+        var chartEl = document.getElementById('healthGanttChart');
+        if (!chartEl || typeof echarts === 'undefined') return;
+
+        if (!_healthGanttChart) {
+            _healthGanttChart = echarts.init(chartEl);
+        }
+
+        var sources = f.sources;
+        var today = new Date();
+        var allDates = [];
+        for (var i = 0; i < sources.length; i++) {
+            if (sources[i].min_date) allDates.push(sources[i].min_date);
+            if (sources[i].max_date) allDates.push(sources[i].max_date);
+        }
+        allDates.sort();
+        if (allDates.length === 0) return;
+        var rangeStart = allDates[0];
+        var rangeEnd = allDates[allDates.length - 1];
+
+        var seriesData = [];
+        var yAxisData = [];
+        for (var i = sources.length - 1; i >= 0; i--) {
+            var s = sources[i];
+            yAxisData.push(s.name);
+            if (!s.min_date || !s.max_date) {
+                seriesData.push({
+                    value: [i, 0, 0],
+                    _name: s.name,
+                    _color: '#E2E8F0'
+                });
+            } else {
+                var isStale = s.status === 'stale';
+                seriesData.push({
+                    value: [i, new Date(s.min_date).getTime(), new Date(s.max_date).getTime()],
+                    _name: s.name,
+                    _color: isStale ? '#F59E0B' : '#3B82F6',
+                    _warnText: isStale ? ('⚠️' + s.days_since_update + '天未更新') : null
+                });
+            }
+        }
+
+        var _sd = seriesData;
+        _healthGanttChart.setOption({
+            tooltip: {
+                formatter: function(params) {
+                    var item = _sd[params.dataIndex];
+                    if (!item || !item.value[1]) return (item && item._name) || '无数据';
+                    var s = new Date(item.value[1]).toISOString().slice(0,10);
+                    var e = new Date(item.value[2]).toISOString().slice(0,10);
+                    return (item._name || '') + '<br/>' + s + ' ~ ' + e;
+                }
+            },
+            grid: { left: 90, right: 120, top: 10, bottom: 24 },
+            xAxis: {
+                type: 'time',
+                min: new Date(rangeStart).getTime(),
+                max: Math.max(new Date(rangeEnd).getTime(), today.getTime()),
+                axisLabel: { fontSize: 10, color: '#94A3B8', formatter: '{yyyy}-{MM}' },
+                splitLine: { lineStyle: { color: '#F1F5F9' } }
+            },
+            yAxis: {
+                type: 'category',
+                data: yAxisData,
+                axisLabel: { fontSize: 11, color: '#475569' },
+                axisTick: { show: false },
+                axisLine: { lineStyle: { color: '#E2E8F0' } }
+            },
+            series: [{
+                type: 'custom',
+                renderItem: function(params, api) {
+                    var item = _sd[params.dataIndex];
+                    if (!item) return;
+                    var catIdx = api.value(0);
+                    var bandH = api.size([0, 1])[1] * 0.5;
+                    var yBase = api.coord([0, catIdx])[1];
+                    if (!item.value[1]) {
+                        return {
+                            type: 'group',
+                            children: [{
+                                type: 'text',
+                                style: {
+                                    text: '无数据',
+                                    x: api.coord([new Date(rangeStart).getTime(), catIdx])[0],
+                                    y: yBase,
+                                    fill: '#94A3B8',
+                                    fontSize: 11,
+                                    textAlign: 'left',
+                                    textVerticalAlign: 'middle'
+                                }
+                            }]
+                        };
+                    }
+                    var startX = api.coord([item.value[1], catIdx])[0];
+                    var endX = api.coord([item.value[2], catIdx])[0];
+                    var rectW = Math.max(endX - startX, 2);
+                    var fill = item._color || '#3B82F6';
+                    var children = [{
+                        type: 'rect',
+                        transition: ['shape'],
+                        shape: { x: startX, y: yBase - bandH / 2, width: rectW, height: bandH },
+                        style: { fill: fill, borderRadius: 3 }
+                    }];
+                    if (item._warnText) {
+                        children.push({
+                            type: 'text',
+                            style: {
+                                text: item._warnText,
+                                x: endX + 8,
+                                y: yBase,
+                                fill: '#D97706',
+                                fontSize: 11,
+                                textAlign: 'left',
+                                textVerticalAlign: 'middle'
+                            }
+                        });
+                    }
+                    return { type: 'group', children: children };
+                },
+                data: seriesData
+            }]
+        }, true);
+    }
+
+    function _renderHealthMobileTable(f) {
+        var el = document.getElementById('healthMobileTable');
+        if (!el) return;
+        var html = '<table><thead><tr><th>渠道</th><th>截止</th><th>状态</th></tr></thead><tbody>';
         for (var i = 0; i < f.sources.length; i++) {
             var s = f.sources[i];
-            html += '<tr><td>' + s.name + '</td><td>' + s.min_date + '</td><td>' + s.max_date + '</td></tr>';
+            var statusHtml;
+            if (!s.max_date) {
+                statusHtml = '<span class="health-status-nodata">无数据</span>';
+            } else if (s.status === 'stale') {
+                statusHtml = '<span class="health-status-stale">⚠️ 过期</span>';
+            } else {
+                statusHtml = '<span class="health-status-ok">✅</span>';
+            }
+            var dateStr = s.max_date ? s.max_date.slice(0, 7) : '-';
+            html += '<tr><td>' + s.name + '</td><td>' + dateStr + '</td><td>' + statusHtml + '</td></tr>';
         }
         html += '</tbody></table>';
-        tooltip.innerHTML = html;
+        el.innerHTML = html;
     }
 
     function showToast(message) {
@@ -2315,6 +2617,7 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e) 
             if (expensePieChart) expensePieChart.resize();
             if (subPieChart) subPieChart.resize();
             if (accountChart) accountChart.resize();
+            if (_healthGanttChart) _healthGanttChart.resize();
         });
 
         document.querySelectorAll('.seg-tab').forEach(function(tab) {
